@@ -44,7 +44,7 @@ export default class GameBoard {
     }
 
     rotateDiv(pos, deg) {
-        this.grid[pos].style.transform = `rotate(${deg}deg);`;
+        this.grid[pos].style.transform = `rotate(${deg}deg)`;
     }
 
     moveCharacter(character) {
@@ -57,7 +57,8 @@ export default class GameBoard {
             if (character.rotation && nextMovePos !== character.pos) {
                 this.rotateDiv(nextMovePos, character.dir.rotation);
                 this.rotateDiv(character.pos, 0);
-            }
+              }
+        
 
             this.removeObject(character.pos, classesToRemove);
             this.addObject(nextMovePos, classesToAdd);
