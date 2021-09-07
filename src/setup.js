@@ -33,7 +33,7 @@ export const OBJECT_TYPE = {
     INKY: 'inky',
     CLYDE: 'clyde',
     PILL: 'pill',
-    PACKMAN: 'packman',
+    PACMAN: 'pacman',
     GHOST: 'ghost',
     SCARED: 'scared',
     GHOSTLAIR: 'lair',
