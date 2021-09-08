@@ -1,15 +1,16 @@
-import { LEVEL, OBJECT_TYPE, ROUND_END_TIME } from "./src/setup.js";
-import { randomMovement } from "./src/ghostMoves.js";
+import { LEVEL, OBJECT_TYPE, ROUND_END_TIME } from './src/setup.js';
+import { randomMovement } from './src/ghostMoves.js';
 
 import GameBoard from './src/GameBoard.js';
-import Pacman from "./src/Pacman.js";
-import Ghost from "./src/Ghost.js";
+import Pacman from './src/Pacman.js';
+import Ghost from './src/Ghost.js';
 
 // DOM Elements
 const gameGrid = document.getElementById('game');
 const scoreTable = document.getElementById('score');
 const startButton = document.getElementById('start');
 const livesInfo = document.getElementById('lives');
+const status = document.querySelector('.game-status');
 
 // Sounds
 const soundDot = './assets/sounds/munch.wav';
@@ -38,21 +39,23 @@ let lives = 3;
 const playAudio = (sound) => {
     const soundEffect = new Audio(sound);
     soundEffect.play();
-}
+};
 
 const gameOver = (pacman) => {
     playAudio(soundGameOver);
-    
-    document.removeEventListener('keydown', e => pacman.handleKeyInput(e, gameBoard.objectExist));
+
+    document.removeEventListener('keydown', (e) =>
+        pacman.handleKeyInput(e, gameBoard.objectExist)
+    );
     gameBoard.showGameStatus(gameWin);
 
     clearInterval(timer);
     startButton.classList.remove('hide');
     livesInfo.classList.add('hide');
-}
+};
 
 const checkCollisions = (pacman, ghosts) => {
-    const collidedGhost = ghosts.find(ghost => pacman.pos === ghost.pos);
+    const collidedGhost = ghosts.find((ghost) => pacman.pos === ghost.pos);
 
     if (collidedGhost) {
         if (pacman.powerPill) {
@@ -62,13 +65,13 @@ const checkCollisions = (pacman, ghosts) => {
                     gameBoard.removeObject(collidedGhost.pos, [
                         OBJECT_TYPE.GHOST,
                         OBJECT_TYPE.SCARED,
-                        collidedGhost.name
+                        collidedGhost.name,
                     ]);
-                    
+
                     ghost.pos = ghost.startPos;
                     score += 100;
                 }
-            })
+            });
         } else {
             // If you have lives continue playing from start pos
             lives--;
@@ -84,7 +87,7 @@ const checkCollisions = (pacman, ghosts) => {
                     gameBoard.removeObject(ghost.pos, [
                         OBJECT_TYPE.GHOST,
                         OBJECT_TYPE.SCARED,
-                        ghost.name
+                        ghost.name,
                     ]);
 
                     ghost.pos = ghost.startPos;
@@ -93,21 +96,22 @@ const checkCollisions = (pacman, ghosts) => {
                 gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
                 pacman.pos = PACMAN_START_POS;
 
-                setTimeout(() => { 
-                   timer = setInterval(() => gameLoop(pacman, ghosts), GLOBAL_SPEED);
+                setTimeout(() => {
+                    timer = setInterval(
+                        () => gameLoop(pacman, ghosts),
+                        GLOBAL_SPEED
+                    );
                 }, ROUND_END_TIME);
-                
             }
-            
         }
     }
-}
+};
 
 const gameLoop = (pacman, ghosts) => {
     gameBoard.moveCharacter(pacman);
     checkCollisions(pacman, ghosts);
 
-    ghosts.forEach(ghost => gameBoard.moveCharacter(ghost));
+    ghosts.forEach((ghost) => gameBoard.moveCharacter(ghost));
     checkCollisions(pacman, ghosts);
 
     // Check for dot
@@ -118,19 +122,32 @@ const gameLoop = (pacman, ghosts) => {
         score += 10;
     }
 
-    // Check for powerpill
+    // Check for power pill
     if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.PILL)) {
         playAudio(soundPill);
         gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PILL]);
-        
- 
+
         pacman.powerPill = true;
         score += 50;
 
+        // If another power pill was picked up clear timeouts
         clearTimeout(powerPillTimer);
-        powerPillTimer = setTimeout(() => (pacman.powerPill = false), POWER_PILL_TIME);
+        powerPillTimer = setTimeout(
+            () => (pacman.powerPill = false),
+            POWER_PILL_TIME
+        );
         clearTimeout(ghostAlertTimer);
-        ghostAlertTimer = setTimeout(() => ghostAlert(), POWER_PILL_TIME - ALERT_TIME);
+        ghostAlertTimer = setTimeout(() => {
+            // 4 ticks to alert ghost scare effect fading
+            clearInterval(alertInterval);
+            alertInterval = setInterval(() => {
+                ghosts.forEach((ghost) => {
+                    ghost.isAlerted ^= true;
+                });
+            }, ALERT_TIME / 4);
+            // Clearing interval
+            setTimeout(() => clearInterval(alertInterval), ALERT_TIME);
+        }, POWER_PILL_TIME - ALERT_TIME);
     }
 
     // Change ghost scare
@@ -141,13 +158,7 @@ const gameLoop = (pacman, ghosts) => {
         });
     }
 
-    const ghostAlert = () => {
-        clearInterval(alertInterval);
-        alertInterval = setInterval(() => ghosts.forEach((ghost) => ghost.isAlerted ^= true), ALERT_TIME / 4);
-        setTimeout(() => clearInterval(alertInterval), ALERT_TIME)
-    }
-
-    // Check for all dots 
+    // Check for all dots
     if (!gameBoard.dotCount) {
         gameWin = true;
         gameOver(pacman, ghosts);
@@ -164,7 +175,7 @@ const gameLoop = (pacman, ghosts) => {
 
     // Show Score
     scoreTable.innerHTML = score;
-}
+};
 
 const startGame = () => {
     playAudio(soundGameStart);
@@ -176,7 +187,7 @@ const startGame = () => {
 
     livesInfo.classList.remove('hide');
     startButton.classList.add('hide');
-
+    status.classList.add('hide');
 
     gameBoard.createGrid(LEVEL);
 
@@ -184,18 +195,17 @@ const startGame = () => {
     gameBoard.addObject(PACMAN_START_POS, [OBJECT_TYPE.PACMAN]);
     document.addEventListener('keydown', (e) => {
         pacman.handleKeyInput(e, gameBoard.objectExist);
-        }   
-    );
+    });
 
     const ghosts = [
         new Ghost(5, 207, randomMovement, OBJECT_TYPE.BLINKY),
         new Ghost(4, 208, randomMovement, OBJECT_TYPE.PINKY),
         new Ghost(3, 229, randomMovement, OBJECT_TYPE.INKY),
-        new Ghost(2, 251, randomMovement, OBJECT_TYPE.CLYDE)
+        new Ghost(2, 251, randomMovement, OBJECT_TYPE.CLYDE),
     ];
 
     timer = setInterval(() => gameLoop(pacman, ghosts), GLOBAL_SPEED);
-}
+};
 
 // Initialize game
 startButton.addEventListener('click', startGame);

@@ -1,4 +1,4 @@
-import { OBJECT_TYPE, DIRECTIONS } from "./setup.js";
+import { OBJECT_TYPE, DIRECTIONS } from './setup.js';
 
 export default class Pacman {
     constructor(speed, startPos) {
@@ -13,7 +13,7 @@ export default class Pacman {
 
     shouldMove() {
         if (!this.dir) return false;
-        if(this.timer === this.speed) {
+        if (this.timer === this.speed) {
             this.timer = 0;
             return true;
         }
@@ -32,11 +32,11 @@ export default class Pacman {
         return { nextMovePos, direction: this.dir };
     }
 
-    makeMove() {    
+    makeMove() {
         const classesToRemove = [OBJECT_TYPE.PACMAN];
         const classesToAdd = [OBJECT_TYPE.PACMAN];
 
-        return { classesToRemove, classesToAdd};
+        return { classesToRemove, classesToAdd };
     }
 
     setNewPos(nexMovePos) {
@@ -56,7 +56,8 @@ export default class Pacman {
         if (
             objectExist(nextMovePos, OBJECT_TYPE.WALL) ||
             objectExist(nextMovePos, OBJECT_TYPE.GHOSTLAIR)
-        ) return;
+        )
+            return;
         this.dir = dir;
     }
 }

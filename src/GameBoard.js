@@ -1,4 +1,4 @@
-import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST, ROUND_END_TIME } from "./setup.js";
+import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST, ROUND_END_TIME } from './setup.js';
 
 export default class GameBoard {
     constructor(DOMGrid) {
@@ -9,10 +9,10 @@ export default class GameBoard {
 
     showGameStatus(gameWin, lives) {
         const div = document.querySelector('.game-status');
-        div.style.display = 'flex';
-        let end = setTimeout(() => div.style.display = 'none', ROUND_END_TIME);
+        div.classList.remove('hide');
+        let end = setTimeout(() => div.classList.add('hide'), ROUND_END_TIME);
         switch (lives) {
-            case 2: 
+            case 2:
                 div.innerHTML = `YOU HAVE 2 LIVES LEFT!`;
                 break;
             case 1:
@@ -34,7 +34,7 @@ export default class GameBoard {
         level.forEach((square) => {
             const div = document.createElement('div');
             div.classList.add('square', CLASS_LIST[square]);
-            div.style.cssText = `width: ${CELL_SIZE}px; height: ${CELL_SIZE}px;`
+            div.style.cssText = `width: ${CELL_SIZE}px; height: ${CELL_SIZE}px;`;
             this.DOMGrid.appendChild(div);
             this.grid.push(div);
 
@@ -52,7 +52,7 @@ export default class GameBoard {
 
     objectExist = (pos, object) => {
         return this.grid[pos].classList.contains(object);
-    }
+    };
 
     rotateDiv(pos, deg) {
         this.grid[pos].style.transform = `rotate(${deg}deg)`;
@@ -63,14 +63,15 @@ export default class GameBoard {
             const { nextMovePos, direction } = character.getNextMove(
                 this.objectExist
             );
-            if (character.pos === nextMovePos && character.dir === direction) return;
+
+            if (character.pos === nextMovePos && character.dir === direction)
+                return;
             const { classesToRemove, classesToAdd } = character.makeMove();
 
             if (character.rotation && nextMovePos !== character.pos) {
                 this.rotateDiv(nextMovePos, character.dir.rotation);
                 this.rotateDiv(character.pos, 0);
-              }
-        
+            }
 
             this.removeObject(character.pos, classesToRemove);
             this.addObject(nextMovePos, classesToAdd);

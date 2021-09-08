@@ -1,4 +1,4 @@
-import { DIRECTIONS, OBJECT_TYPE } from "./setup.js";
+import { DIRECTIONS, OBJECT_TYPE } from './setup.js';
 
 export default class Ghost {
     constructor(speed = 5, startPos, movement, name) {
@@ -8,6 +8,7 @@ export default class Ghost {
         this.pos = startPos;
         this.dir = DIRECTIONS.ArrowRight;
         this.speed = speed;
+        this.startSpeed = speed;
         this.timer = 0;
         this.isScared = false;
         this.isAlerted = false;
@@ -25,18 +26,31 @@ export default class Ghost {
 
     getNextMove(objectExist) {
         const { nextMovePos, direction } = this.movement(
-            this.pos, this.dir, objectExist
+            this.pos,
+            this.dir,
+            objectExist
         );
 
         return { nextMovePos, direction };
     }
 
     makeMove() {
-        const classesToRemove = [OBJECT_TYPE.GHOST, OBJECT_TYPE.SCARED, OBJECT_TYPE.ALERTED, this.name];
+        const classesToRemove = [
+            OBJECT_TYPE.GHOST,
+            OBJECT_TYPE.SCARED,
+            OBJECT_TYPE.ALERTED,
+            this.name,
+        ];
         let classesToAdd = [OBJECT_TYPE.GHOST, this.name];
 
-        if (this.isScared) classesToAdd = [...classesToAdd, OBJECT_TYPE.SCARED];
-        if (this.isAlerted) classesToAdd = [...classesToAdd, OBJECT_TYPE.ALERTED];
+        if (this.isScared) {
+            classesToAdd = [...classesToAdd, OBJECT_TYPE.SCARED];
+            this.speed = this.startSpeed + 2;
+        } else {
+            this.speed = this.startSpeed;
+        }
+        if (this.isAlerted)
+            classesToAdd = [...classesToAdd, OBJECT_TYPE.ALERTED];
 
         return { classesToRemove, classesToAdd };
     }

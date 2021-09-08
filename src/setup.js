@@ -38,9 +38,9 @@ export const OBJECT_TYPE = {
     GHOST: 'ghost',
     SCARED: 'scared',
     GHOSTLAIR: 'lair',
+    ALERTED: 'alerted',
     TELEPORT_IN: 'teleport-in',
-    TELEPORT_OUT: 'teleport-out',
-    ALERTED: 'alerted'
+    TELEPORT_OUT: 'teleport-out'
 };
 
 export const CLASS_LIST = [
@@ -55,7 +55,7 @@ export const CLASS_LIST = [
     OBJECT_TYPE.PACMAN,
     OBJECT_TYPE.GHOSTLAIR,
     OBJECT_TYPE.TELEPORT_IN,
-    OBJECT_TYPE.TELEPORT_OUT
+    OBJECT_TYPE.TELEPORT_OUT,
 ];
 
 export const LEVEL = [
