@@ -10,6 +10,7 @@ export default class Ghost {
         this.speed = speed;
         this.timer = 0;
         this.isScared = false;
+        this.isAlerted = false;
         this.rotation = false;
     }
 
@@ -31,10 +32,11 @@ export default class Ghost {
     }
 
     makeMove() {
-        const classesToRemove = [OBJECT_TYPE.GHOST, OBJECT_TYPE.SCARED, this.name];
+        const classesToRemove = [OBJECT_TYPE.GHOST, OBJECT_TYPE.SCARED, OBJECT_TYPE.ALERTED, this.name];
         let classesToAdd = [OBJECT_TYPE.GHOST, this.name];
 
         if (this.isScared) classesToAdd = [...classesToAdd, OBJECT_TYPE.SCARED];
+        if (this.isAlerted) classesToAdd = [...classesToAdd, OBJECT_TYPE.ALERTED];
 
         return { classesToRemove, classesToAdd };
     }
@@ -43,5 +45,4 @@ export default class Ghost {
         this.pos = nextMovePos;
         this.dir = direction;
     }
-
 }

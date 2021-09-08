@@ -1,5 +1,6 @@
 export const GRID_SIZE = 20;
 export const CELL_SIZE = 20;
+export const ROUND_END_TIME = 3000;
 
 export const DIRECTIONS = {
     ArrowLeft: {
@@ -37,6 +38,9 @@ export const OBJECT_TYPE = {
     GHOST: 'ghost',
     SCARED: 'scared',
     GHOSTLAIR: 'lair',
+    TELEPORT_IN: 'teleport-in',
+    TELEPORT_OUT: 'teleport-out',
+    ALERTED: 'alerted'
 };
 
 export const CLASS_LIST = [
@@ -48,8 +52,10 @@ export const CLASS_LIST = [
     OBJECT_TYPE.INKY,
     OBJECT_TYPE.CLYDE,
     OBJECT_TYPE.PILL,
-    OBJECT_TYPE.PACKMAN,
-    OBJECT_TYPE.GHOSTLAIR
+    OBJECT_TYPE.PACMAN,
+    OBJECT_TYPE.GHOSTLAIR,
+    OBJECT_TYPE.TELEPORT_IN,
+    OBJECT_TYPE.TELEPORT_OUT
 ];
 
 export const LEVEL = [
@@ -64,7 +70,7 @@ export const LEVEL = [
     0, 0, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 0, 0, 0,
     0, 0, 0, 1, 2, 1, 2, 1, 9, 9, 9, 9, 1, 2, 1, 2, 1, 0, 0, 0,
     1, 1, 1, 1, 2, 1, 2, 1, 9, 9, 9, 9, 1, 2, 1, 2, 1, 1, 1, 1, 
-    1, 0, 0, 0, 2, 2, 2, 1, 9, 9, 9, 9, 1, 2, 2, 2, 0, 0, 0, 1, 
+    10, 0, 0, 0, 2, 2, 2, 1, 9, 9, 9, 9, 1, 2, 2, 2, 0, 0, 0, 11, 
     1, 1, 1, 1, 2, 1, 2, 1, 9, 9, 9, 9, 1, 2, 1, 2, 1, 1, 1, 1, 
     0, 0, 0, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 0, 0, 0,
     0, 0, 0, 1, 2, 1, 2, 0, 0, 0, 0, 0, 0, 2, 1, 2, 1, 0, 0, 0,

@@ -1,4 +1,4 @@
-import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST } from "./setup.js";
+import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST, ROUND_END_TIME } from "./setup.js";
 
 export default class GameBoard {
     constructor(DOMGrid) {
@@ -7,11 +7,22 @@ export default class GameBoard {
         this.DOMGrid = DOMGrid;
     }
 
-    showGameStatus(gameWin) {
-        const div = document.createElement('div');
-        div.className = 'game-status';
-        div.innerHTML = `${gameWin ? 'WIN!' : 'GAME OVER'}`;
-        this.DOMGrid.appendChild(div);
+    showGameStatus(gameWin, lives) {
+        const div = document.querySelector('.game-status');
+        div.style.display = 'flex';
+        let end = setTimeout(() => div.style.display = 'none', ROUND_END_TIME);
+        switch (lives) {
+            case 2: 
+                div.innerHTML = `YOU HAVE 2 LIVES LEFT!`;
+                break;
+            case 1:
+                div.innerHTML = `YOU HAVE 1 LIFE LEFT!`;
+                break;
+            default:
+                clearTimeout(end);
+                div.innerHTML = `${gameWin ? 'YOU HAVE WON!' : 'GAME OVER'}`;
+                break;
+        }
     }
 
     createGrid(level) {
@@ -20,7 +31,7 @@ export default class GameBoard {
         this.DOMGrid.innerHTML = '';
         this.DOMGrid.style.cssText = `grid-template-columns: repeat(${GRID_SIZE}, ${CELL_SIZE}px);`;
 
-        level.forEach((square, i) => {
+        level.forEach((square) => {
             const div = document.createElement('div');
             div.classList.add('square', CLASS_LIST[square]);
             div.style.cssText = `width: ${CELL_SIZE}px; height: ${CELL_SIZE}px;`
@@ -52,6 +63,7 @@ export default class GameBoard {
             const { nextMovePos, direction } = character.getNextMove(
                 this.objectExist
             );
+            if (character.pos === nextMovePos && character.dir === direction) return;
             const { classesToRemove, classesToAdd } = character.makeMove();
 
             if (character.rotation && nextMovePos !== character.pos) {

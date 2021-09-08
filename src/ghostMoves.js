@@ -1,6 +1,15 @@
-import { DIRECTIONS, OBJECT_TYPE } from "./setup.js";
+import { DIRECTIONS, OBJECT_TYPE, GRID_SIZE } from "./setup.js";
 
 export function randomMovement(position, direction, objectExist) {
+    if (
+        (objectExist(position - 1, OBJECT_TYPE.WALL) || objectExist(position - 1, OBJECT_TYPE.GHOST)) &&
+        (objectExist(position + 1, OBJECT_TYPE.WALL) || objectExist(position + 1, OBJECT_TYPE.GHOST)) &&
+        (objectExist(position - GRID_SIZE, OBJECT_TYPE.WALL) || objectExist(position - GRID_SIZE, OBJECT_TYPE.GHOST)) &&
+        (objectExist(position + GRID_SIZE, OBJECT_TYPE.WALL) || objectExist(position + GRID_SIZE, OBJECT_TYPE.GHOST))
+    ) { 
+        return { nextMovePos: position, direction };
+    }
+
     let dir = direction;
     let nextMovePos = position + dir.movement;
 
@@ -13,9 +22,7 @@ export function randomMovement(position, direction, objectExist) {
         dir = DIRECTIONS[key];
         nextMovePos = position + dir.movement;
     }
-
-   
-
+    
     return { nextMovePos, direction: dir };
-
 }
+

@@ -3,6 +3,7 @@ import { OBJECT_TYPE, DIRECTIONS } from "./setup.js";
 export default class Pacman {
     constructor(speed, startPos) {
         this.pos = startPos;
+        this.startPos = startPos;
         this.speed = speed;
         this.dir = null;
         this.timer = 0;
@@ -45,6 +46,7 @@ export default class Pacman {
     handleKeyInput(e, objectExist) {
         let dir;
         if (e.keyCode >= 37 && e.keyCode <= 40) {
+            e.preventDefault();
             dir = DIRECTIONS[e.key];
         } else {
             return;

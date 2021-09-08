@@ -1,18 +1,32 @@
 * {
   box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font-family: sans-serif;
 }
+
 
 body {
   background: url("./assets/img/background.jpg") no-repeat center center fixed;
   background-size: cover;
 }
 
+
 .container {
+  height: 100vh;
   position: relative;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  justify-content: space-evenly;
+}
+
+.game-screen,
+.info-screen {
+  display: flex;
   justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 
 .game-field {
@@ -21,11 +35,43 @@ body {
   background: black;
 }
 
+.info-screen {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 30px 10px;
+  border-radius: 15px;
+}
+
+.lives-info {
+  margin-top: 20px;
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.life-icon {
+  width: 20px;
+  height: 20px;
+  background: yellow;
+  border: none;
+  border-radius: 50%;
+  clip-path: polygon(
+    0 0,
+    20px 0,
+    20px -5px,
+    8px 10px,
+    20px 25px,
+    20px 20px,
+    0 20px
+  );
+}
+
 .game-status {
   position: absolute;
   top: 0;
   left: 0;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   width: 100%;
@@ -43,20 +89,30 @@ body {
   justify-content: center;
   width: 200px;
   height: 50px;
-  border: 5px darkblue solid;
   background: black;
   margin-top: 20px;
   color: white;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 2rem;
+  font-size: 1em;
 }
+
 
 .btn {
   margin-top: 20px;
-}
+  padding: 10px 20px;
+  background: black;
+  border: 1px solid white;
+  border-radius: 3px;
+  color: white;
+  font-size: 1em;
+} 
 
 .hide {
   display: none;
+}
+
+.alerted {
+  background: black !important;
 }
 
 .square {
@@ -162,5 +218,13 @@ body {
       20px 20px,
       0 20px
     );
+  }
+}
+
+
+@media screen and (max-width: 768px) {
+  .container {
+    height: 100%;
+    flex-direction: column;
   }
 }
