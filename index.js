@@ -1,9 +1,10 @@
-import { LEVEL, OBJECT_TYPE, ROUND_END_TIME } from './src/setup.js';
+import { OBJECT_TYPE, ROUND_END_TIME, GRID_SIZE } from './src/setup.js';
 import { randomMovement } from './src/ghostMoves.js';
 
 import GameBoard from './src/GameBoard.js';
 import Pacman from './src/Pacman.js';
 import Ghost from './src/Ghost.js';
+import Level from './src/Level.js';
 
 // DOM Elements
 const gameGrid = document.getElementById('game');
@@ -23,8 +24,12 @@ const soundGhost = './assets/sounds/eat_ghost.wav';
 const POWER_PILL_TIME = 10000;
 const ALERT_TIME = 2000;
 const GLOBAL_SPEED = 80;
-const gameBoard = GameBoard.createGameBoard(gameGrid, LEVEL);
-const PACMAN_START_POS = 290;
+const level = new Level(GRID_SIZE);
+
+
+const gameBoard = GameBoard.createGameBoard(gameGrid, level.generatePathSystem());
+level.calculatePositions();
+const PACMAN_START_POS = level.getPacmanPosition();
 
 // Initial Setup
 let score = 0;
@@ -167,10 +172,10 @@ const gameLoop = (pacman, ghosts) => {
     // Check teleport
     if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.TELEPORT_IN)) {
         gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
-        pacman.pos += 19;
+        pacman.pos += GRID_SIZE - 1;
     } else if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.TELEPORT_OUT)) {
         gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
-        pacman.pos -= 19;
+        pacman.pos -= GRID_SIZE - 1;
     }
 
     // Show Score
@@ -189,7 +194,7 @@ const startGame = () => {
     startButton.classList.add('hide');
     status.classList.add('hide');
 
-    gameBoard.createGrid(LEVEL);
+    gameBoard.createGrid(level.grid);
 
     const pacman = new Pacman(2, PACMAN_START_POS);
     gameBoard.addObject(PACMAN_START_POS, [OBJECT_TYPE.PACMAN]);
@@ -197,11 +202,13 @@ const startGame = () => {
         pacman.handleKeyInput(e, gameBoard.objectExist);
     });
 
+    const ghost_positions = level.getGhostPositions();
+
     const ghosts = [
-        new Ghost(5, 207, randomMovement, OBJECT_TYPE.BLINKY),
-        new Ghost(4, 208, randomMovement, OBJECT_TYPE.PINKY),
-        new Ghost(3, 229, randomMovement, OBJECT_TYPE.INKY),
-        new Ghost(2, 251, randomMovement, OBJECT_TYPE.CLYDE),
+        new Ghost(5, ghost_positions[0], randomMovement, OBJECT_TYPE.BLINKY),
+        new Ghost(4, ghost_positions[1], randomMovement, OBJECT_TYPE.PINKY),
+        new Ghost(3, ghost_positions[2], randomMovement, OBJECT_TYPE.INKY),
+        new Ghost(2, ghost_positions[3], randomMovement, OBJECT_TYPE.CLYDE),
     ];
 
     timer = setInterval(() => gameLoop(pacman, ghosts), GLOBAL_SPEED);
