@@ -1,4 +1,4 @@
-import { DIRECTIONS, OBJECT_TYPE } from './setup.js';
+import { DIRECTIONS, OBJECT_TYPE, GRID_SIZE } from './setup.js';
 
 export default class Ghost {
     constructor(speed = 5, startPos, movement, name) {
@@ -13,6 +13,10 @@ export default class Ghost {
         this.isScared = false;
         this.isAlerted = false;
         this.rotation = false;
+    }
+
+    getCoordinates() {
+        return [(this.pos - (this.pos % GRID_SIZE)) / GRID_SIZE, this.pos % GRID_SIZE];
     }
 
     shouldMove() {

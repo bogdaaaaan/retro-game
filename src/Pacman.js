@@ -1,4 +1,4 @@
-import { OBJECT_TYPE, DIRECTIONS } from './setup.js';
+import { OBJECT_TYPE, DIRECTIONS, GRID_SIZE } from './setup.js';
 
 export default class Pacman {
     constructor(speed, startPos) {
@@ -9,6 +9,10 @@ export default class Pacman {
         this.timer = 0;
         this.powerPill = false;
         this.rotation = true;
+    }
+
+    getCoordinates() {
+        return [(this.pos - (this.pos % GRID_SIZE)) / GRID_SIZE, this.pos % GRID_SIZE];
     }
 
     shouldMove() {

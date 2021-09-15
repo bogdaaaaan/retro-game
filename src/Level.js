@@ -116,6 +116,7 @@ export default class Level {
         }
         this.ghosts_pos = positions;
         this.pacman_pos = (positions[positions.length - 1]) + (this.size * 2) - 2;
+        return [this.pacman_pos, this.ghosts_pos];
     }
 
     getGhostPositions() {
@@ -125,4 +126,6 @@ export default class Level {
     getPacmanPosition() {
         return this.pacman_pos;
     }
+
+    
 }

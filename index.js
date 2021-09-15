@@ -28,8 +28,8 @@ const level = new Level(GRID_SIZE);
 
 
 const gameBoard = GameBoard.createGameBoard(gameGrid, level.generatePathSystem());
-level.calculatePositions();
-const PACMAN_START_POS = level.getPacmanPosition();
+
+const [PACMAN_START_POS, GHOST_START_POS] = level.calculatePositions();
 
 // Initial Setup
 let score = 0;
@@ -202,13 +202,11 @@ const startGame = () => {
         pacman.handleKeyInput(e, gameBoard.objectExist);
     });
 
-    const ghost_positions = level.getGhostPositions();
-
     const ghosts = [
-        new Ghost(5, ghost_positions[0], randomMovement, OBJECT_TYPE.BLINKY),
-        new Ghost(4, ghost_positions[1], randomMovement, OBJECT_TYPE.PINKY),
-        new Ghost(3, ghost_positions[2], randomMovement, OBJECT_TYPE.INKY),
-        new Ghost(2, ghost_positions[3], randomMovement, OBJECT_TYPE.CLYDE),
+        new Ghost(5, GHOST_START_POS[0], randomMovement, OBJECT_TYPE.BLINKY),
+        new Ghost(4, GHOST_START_POS[1], randomMovement, OBJECT_TYPE.PINKY),
+        new Ghost(3, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
+        new Ghost(2, GHOST_START_POS[3], randomMovement, OBJECT_TYPE.CLYDE),
     ];
 
     timer = setInterval(() => gameLoop(pacman, ghosts), GLOBAL_SPEED);
