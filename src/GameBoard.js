@@ -1,9 +1,15 @@
-import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST, ROUND_END_TIME } from './setup.js';
+import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST, ROUND_END_TIME, coordsFromPos } from './setup.js';
+import PathFinding from './PathFinding.js';
 
 export default class GameBoard {
     constructor(DOMGrid) {
         this.dotCount = 0;
-        this.grid = [];
+        this.finding = new PathFinding();
+        this.grid = new Array(GRID_SIZE);
+        for (let i = 0; i < this.grid.length; i++) {
+            this.grid[i] = new Array(GRID_SIZE);
+        }
+
         this.DOMGrid = DOMGrid;
     }
 
@@ -27,37 +33,45 @@ export default class GameBoard {
 
     createGrid(level) {
         this.dotCount = 0;
-        this.grid = [];
+        this.grid = new Array(GRID_SIZE);
+        for (let i = 0; i < this.grid.length; i++) {
+            this.grid[i] = new Array(GRID_SIZE);
+        }
+
         this.DOMGrid.innerHTML = '';
         this.DOMGrid.style.cssText = `grid-template-columns: repeat(${GRID_SIZE}, ${CELL_SIZE}px);`;
 
-        level.forEach((row) => {
-            row.forEach((square) => {
+        for (let i = 0; i < level.length; i++) {
+            for (let j = 0; j < level[i].length; j++) {
                 const div = document.createElement('div');
-                div.classList.add('square', CLASS_LIST[square]);
+                div.classList.add('square', CLASS_LIST[level[i][j]]);
                 div.style.cssText = `width: ${CELL_SIZE}px; height: ${CELL_SIZE}px;`;
                 this.DOMGrid.appendChild(div);
-                this.grid.push(div);
+                this.grid[i][j] = div;
     
-                if (CLASS_LIST[square] === OBJECT_TYPE.DOT) this.dotCount++;
-            })
-        });
+                if (CLASS_LIST[level[i][j]] === OBJECT_TYPE.DOT) this.dotCount++;
+            }
+        }       
     }
 
     addObject(pos, classes) {
-        this.grid[pos].classList.add(...classes);
+        const [pos_x, pos_y] = coordsFromPos(pos);
+        this.grid[pos_x][pos_y].classList.add(...classes);
     }
 
     removeObject(pos, classes) {
-        this.grid[pos].classList.remove(...classes);
+        const [pos_x, pos_y] = coordsFromPos(pos);
+        this.grid[pos_x][pos_y].classList.remove(...classes);
     }
 
     objectExist = (pos, object) => {
-        return this.grid[pos].classList.contains(object);
+        const [pos_x, pos_y] = coordsFromPos(pos);
+        return this.grid[pos_x][pos_y].classList.contains(object);
     };
 
     rotateDiv(pos, deg) {
-        this.grid[pos].style.transform = `rotate(${deg}deg)`;
+        const [pos_x, pos_y] = coordsFromPos(pos);
+        this.grid[pos_x][pos_y].style.transform = `rotate(${deg}deg)`;
     }
 
     moveCharacter(character) {
@@ -84,6 +98,15 @@ export default class GameBoard {
 
     // create method to calculate paths from pacman to ghosts using bfs
     // give pacman and ghosts their own coordinates
+    renderPaths(pacman, ghosts, level) {
+        
+        // ghosts.map(ghost => {
+        //     // bfs for paths from pacman to each ghost
+        //     this.finding.bfs(pacman.pos, ghost.pos, level);
+        // });
+        console.log(this.finding.bfs(pacman.pos, ghosts[0].pos, level));
+        
+    }
 
     static createGameBoard(DOMGrid, level) {
         const board = new this(DOMGrid);

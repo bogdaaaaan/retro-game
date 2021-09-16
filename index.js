@@ -1,4 +1,4 @@
-import { OBJECT_TYPE, ROUND_END_TIME, GRID_SIZE } from './src/setup.js';
+import { OBJECT_TYPE, ROUND_END_TIME, GRID_SIZE, coordsFromPos } from './src/setup.js';
 import { randomMovement } from './src/ghostMoves.js';
 
 import GameBoard from './src/GameBoard.js';
@@ -119,6 +119,8 @@ const gameLoop = (pacman, ghosts) => {
     ghosts.forEach((ghost) => gameBoard.moveCharacter(ghost));
     checkCollisions(pacman, ghosts);
 
+    //gameBoard.renderPaths(pacman, ghosts, level.grid);
+
     // Check for dot
     if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.DOT)) {
         playAudio(soundDot);
@@ -197,6 +199,7 @@ const startGame = () => {
     gameBoard.createGrid(level.grid);
 
     const pacman = new Pacman(2, PACMAN_START_POS);
+
     gameBoard.addObject(PACMAN_START_POS, [OBJECT_TYPE.PACMAN]);
     document.addEventListener('keydown', (e) => {
         pacman.handleKeyInput(e, gameBoard.objectExist);
@@ -204,9 +207,9 @@ const startGame = () => {
 
     const ghosts = [
         new Ghost(5, GHOST_START_POS[0], randomMovement, OBJECT_TYPE.BLINKY),
-        new Ghost(4, GHOST_START_POS[1], randomMovement, OBJECT_TYPE.PINKY),
-        new Ghost(3, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
-        new Ghost(2, GHOST_START_POS[3], randomMovement, OBJECT_TYPE.CLYDE),
+        //new Ghost(4, GHOST_START_POS[1], randomMovement, OBJECT_TYPE.PINKY),
+        //new Ghost(3, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
+        //new Ghost(2, GHOST_START_POS[3], randomMovement, OBJECT_TYPE.CLYDE),
     ];
 
     timer = setInterval(() => gameLoop(pacman, ghosts), GLOBAL_SPEED);

@@ -40,7 +40,8 @@ export const OBJECT_TYPE = {
     GHOSTLAIR: 'lair',
     ALERTED: 'alerted',
     TELEPORT_IN: 'teleport-in',
-    TELEPORT_OUT: 'teleport-out'
+    TELEPORT_OUT: 'teleport-out',
+    PATH: 'path'
 };
 
 export const CLASS_LIST = [
@@ -56,6 +57,7 @@ export const CLASS_LIST = [
     OBJECT_TYPE.GHOSTLAIR,
     OBJECT_TYPE.TELEPORT_IN,
     OBJECT_TYPE.TELEPORT_OUT,
+    OBJECT_TYPE.PATH
 ];
 
 
@@ -75,6 +77,10 @@ export function generateBaseLevel() {
     
     return map;
 }  
+
+export function coordsFromPos(pos) {
+    return [(pos - (pos % GRID_SIZE)) / GRID_SIZE, pos % GRID_SIZE];
+}
 
 export const LEVEL = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],

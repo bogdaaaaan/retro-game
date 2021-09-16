@@ -1,4 +1,4 @@
-import { OBJECT_TYPE, DIRECTIONS, GRID_SIZE } from './setup.js';
+import { OBJECT_TYPE, DIRECTIONS, GRID_SIZE, coordsFromPos } from './setup.js';
 
 export default class Pacman {
     constructor(speed, startPos) {
@@ -32,8 +32,8 @@ export default class Pacman {
         ) {
             nextMovePos = this.pos;
         }
-
-        return { nextMovePos, direction: this.dir };
+        
+        return { nextMovePos , direction: this.dir };
     }
 
     makeMove() {
@@ -60,8 +60,7 @@ export default class Pacman {
         if (
             objectExist(nextMovePos, OBJECT_TYPE.WALL) ||
             objectExist(nextMovePos, OBJECT_TYPE.GHOSTLAIR)
-        )
-            return;
+        ) return;
         this.dir = dir;
     }
 }
