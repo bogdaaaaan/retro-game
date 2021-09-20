@@ -5,46 +5,51 @@ export default class PathFinding {
         this.algorithm = null;
     }
 
-    // bfs(from, to, map) {
-    //     const [from_x, from_y] = coordsFromPos(from);
-    //     const [to_x, to_y] = coordsFromPos(to);
-    //     let arr = [...map];
-
-    //     // Directions
-    //     const dir = [ [ 0, 1 ], [ 0, -1 ], [ -1, 0 ], [ 1, 0 ] ];
-
-    //     // Queue
-    //     let q = [];
-
-    //     // Insert the start point
-    //     q.push([from_x, from_y]);
+    bfs(arr, from, to) {
+        //directions
+        // right, left, down, up
+        let dir = [ [0,1], [0,-1], [1,0], [-1,0]];
+    
+        //queue
+        const q = [];
+         
+        //insert the top right corner.
+        q.push(from);
         
-    //     // Until queue is empty 
-    //     while (q.length > 0) {
-    //         let p = q[0];
-    //         q.shift();
-    //         // Mark as visited
-    //         arr[p[0]][p[1]] = 1;
-
-    //         // Destination is reached. 
-    //         if (p[0] === to_x && p[1] === to_y) {
-    //             //console.log(arr, path);
-    //             return true;
-    //         }
-
-    //         // Check all four directions
-    //         for(let i = 0; i < 4; i++) {
-
-    //             // Using the direction array
-    //             let a = p[0] + dir[i][0];
-    //             let b = p[1] + dir[i][1];
-    //             // Not blocked and valid
-    //             if (arr[a][b] != 1) {
-    //                 q.push([a,b]);
-    //             }
-    //         }
-    //     }
-    //     //console.log(arr, path);
-    //     return false;   
-    // }
+        // path
+        const path = [];
+        path.push(from)
+    
+        //until queue is empty
+        while(q.length > 0) {       
+            let p = q.shift();
+    
+            //mark as visited
+            arr[p[0]][p[1]] = -1;
+             
+            //destination is reached.
+            if(p[0] === to[0] && p[1] === to[1]) {
+                console.log(path);
+                return true;
+            } 
+    
+            //check all four directions
+            for(let i = 0; i < 4 ;i++) {
+                //using the direction array
+                let [a, b] = [ p[0] + dir[i][0], p[1] + dir[i][1]];
+                if (a < 0 || b < 0 || a >= arr.length || b >= arr.length) continue;
+    
+                //not blocked and valid
+                if(arr[a][b] !== -1 ) {
+                    if(a === to[0] && b === to[1]) {
+                        console.log(path);
+                        return true;
+                    }
+                    path.push([a,b]);
+                    q.push([a,b]);
+                }
+            }
+        }
+        return false;
+    }
 }
