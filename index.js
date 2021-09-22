@@ -42,8 +42,8 @@ let lives = 3;
 
 // turn off sound
 const playAudio = (sound) => {
-    //const soundEffect = new Audio(sound);
-    //soundEffect.play();
+    const soundEffect = new Audio(sound);
+    soundEffect.play();
 };
 
 const gameOver = (pacman) => {
