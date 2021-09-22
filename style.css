@@ -39,6 +39,13 @@ body {
     border-radius: 15px;
 }
 
+.algorithm-name,
+.algorithm-time {
+    text-align: center;
+    color: white;
+    padding-bottom: 15px;
+}
+
 .lives-info {
     margin-top: 20px;
     padding: 10px 20px;
@@ -148,14 +155,6 @@ body {
     border: 2px solid white;
 }
 
-.ghost::before {
-    left: 3px;
-}
-
-.ghost::after {
-    right: 3px;
-}
-
 .scared {
     background: blue !important;
 }
@@ -164,12 +163,20 @@ body {
     background: white !important;
 }
 
+.ghost::before {
+    left: 3px;
+}
+
+.ghost::after {
+    right: 3px;
+}
+
 .blinky {
     background: red;
 }
 
 .pinky {
-    background: pink;
+    background: rgb(122, 53, 65);
 }
 
 .inky {
@@ -177,6 +184,64 @@ body {
 }
 
 .clyde {
+    background: orange;
+}
+
+
+.path {
+    border: 9px solid black;
+}
+
+.path.blinky-path {
+    background: red;
+}
+.path.pinky-path {
+    background: rgb(122, 53, 65);
+}
+.path.inky-path {
+    background: cyan;
+}
+.path.clyde-path {
+    background: orange;
+}
+
+.path.dot {
+    border: 8px solid black;
+}
+
+.path.clyde-path.blinky,
+.path.clyde-path.pinky,
+.path.clyde-path.inky,
+.path.blinky-path.clyde,
+.path.blinky-path.pinky,
+.path.blinky-path.inky,
+.path.pinky-path.blinky,
+.path.pinky-path.inky,
+.path.pinky-path.clyde,
+.path.inky-path.clyde,
+.path.inky-path.blinky,
+.path.inky-path.pinky {
+    border: none;
+}
+.path.clyde-path.blinky,
+.path.pinky-path.blinky,
+.path.inky-path.blinky {
+    background: red;
+}
+.path.clyde-path.pinky,
+.path.blinky-path.pinky,
+.path.inky-path.pinky {
+    background: rgb(122, 53, 65);
+}
+.path.clyde-path.inky,
+.path.blinky-path.inky,
+.path.pinky-path.inky {
+    background: cyan;
+}
+
+.path.blinky-path.clyde,
+.path.pinky-path.clyde,
+.path.inky-path.clyde {
     background: orange;
 }
 
@@ -204,6 +269,7 @@ body {
     width: 20px;
     height: 20px;
 }
+
 
 @keyframes chew {
     50% {

@@ -41,7 +41,11 @@ export const OBJECT_TYPE = {
     ALERTED: 'alerted',
     TELEPORT_IN: 'teleport-in',
     TELEPORT_OUT: 'teleport-out',
-    PATH: 'path'
+    PATH: 'path',
+    BLINKY_PATH: 'blinky-path',
+    PINKY_PATH: 'pinky-path',
+    INKY_PATH: 'inky-path',
+    CLYDE_PATH: 'clyde-path',
 };
 
 export const CLASS_LIST = [
@@ -57,26 +61,12 @@ export const CLASS_LIST = [
     OBJECT_TYPE.GHOSTLAIR,
     OBJECT_TYPE.TELEPORT_IN,
     OBJECT_TYPE.TELEPORT_OUT,
-    OBJECT_TYPE.PATH
+    OBJECT_TYPE.PATH,
+    OBJECT_TYPE.BLINKY_PATH,
+    OBJECT_TYPE.PINKY_PATH,
+    OBJECT_TYPE.INKY_PATH,
+    OBJECT_TYPE.CLYDE_PATH,
 ];
-
-
-export function generateBaseLevel() {
-    // create level matrix
-    let map = new Array(GRID_SIZE);
-    for (let i = 0; i < GRID_SIZE; i++) {
-        map[i] = new Array(GRID_SIZE)
-    }
-
-    for (let i = 0; i < GRID_SIZE; i++) {
-        for (let j = 0; j < GRID_SIZE; j++) {
-            map[i][j] = 1;
-        }
-    }
-    
-    
-    return map;
-}  
 
 export function coordsFromPos(pos) {
     return [(pos - (pos % GRID_SIZE)) / GRID_SIZE, pos % GRID_SIZE];

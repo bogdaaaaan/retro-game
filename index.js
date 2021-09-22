@@ -24,10 +24,9 @@ const soundGhost = './assets/sounds/eat_ghost.wav';
 const POWER_PILL_TIME = 10000;
 const ALERT_TIME = 2000;
 const GLOBAL_SPEED = 80;
+
 const level = new Level(GRID_SIZE);
-
-
-const gameBoard = GameBoard.createGameBoard(gameGrid, level.generatePathSystem());
+const gameBoard = GameBoard.createGameBoard(gameGrid, level.grid);
 
 const [PACMAN_START_POS, GHOST_START_POS] = level.calculatePositions();
 
@@ -41,9 +40,10 @@ let ghostAlertTimer = null;
 let alertInterval = null;
 let lives = 3;
 
+// turn off sound
 const playAudio = (sound) => {
-    const soundEffect = new Audio(sound);
-    soundEffect.play();
+    //const soundEffect = new Audio(sound);
+    //soundEffect.play();
 };
 
 const gameOver = (pacman) => {
@@ -119,7 +119,12 @@ const gameLoop = (pacman, ghosts) => {
     ghosts.forEach((ghost) => gameBoard.moveCharacter(ghost));
     checkCollisions(pacman, ghosts);
 
-    //gameBoard.renderPaths(pacman, ghosts, level.grid);
+    let startTime = performance.now()
+    gameBoard.renderPaths(pacman, ghosts, level.grid);
+    document.querySelector('.algorithm-name').innerHTML = gameBoard.finding.algorithm;
+    let endTime = performance.now()
+
+    document.querySelector('.algorithm-time').innerHTML = `${(endTime - startTime).toFixed(2)} milliseconds`;
 
     // Check for dot
     if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.DOT)) {
@@ -171,15 +176,6 @@ const gameLoop = (pacman, ghosts) => {
         gameOver(pacman, ghosts);
     }
 
-    // Check teleport
-    if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.TELEPORT_IN)) {
-        gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
-        pacman.pos += GRID_SIZE - 1;
-    } else if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.TELEPORT_OUT)) {
-        gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
-        pacman.pos -= GRID_SIZE - 1;
-    }
-
     // Show Score
     scoreTable.innerHTML = score;
 };
@@ -203,13 +199,16 @@ const startGame = () => {
     gameBoard.addObject(PACMAN_START_POS, [OBJECT_TYPE.PACMAN]);
     document.addEventListener('keydown', (e) => {
         pacman.handleKeyInput(e, gameBoard.objectExist);
+        if (e.keyCode === 90) {
+            gameBoard.changeAlgorithm();
+        }
     });
 
     const ghosts = [
         new Ghost(5, GHOST_START_POS[0], randomMovement, OBJECT_TYPE.BLINKY),
-        //new Ghost(4, GHOST_START_POS[1], randomMovement, OBJECT_TYPE.PINKY),
-        //new Ghost(3, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
-        //new Ghost(2, GHOST_START_POS[3], randomMovement, OBJECT_TYPE.CLYDE),
+        new Ghost(4, GHOST_START_POS[1], randomMovement, OBJECT_TYPE.PINKY),
+        new Ghost(3, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
+        new Ghost(2, GHOST_START_POS[3], randomMovement, OBJECT_TYPE.CLYDE),
     ];
 
     timer = setInterval(() => gameLoop(pacman, ghosts), GLOBAL_SPEED);

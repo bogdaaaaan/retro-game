@@ -1,15 +1,25 @@
-import { generateBaseLevel } from './setup.js';
-
 export default class Level {
     constructor(size) {
         this.size = size;
         this.pacman_pos = null;
         this.ghosts_pos = null;
-        this.grid = generateBaseLevel();
+        this.grid = null;
+        this.generatePathSystem();
     }
 
     generatePathSystem() {
-        let _map = this.grid;
+        // create level matrix
+        let _map = new Array(this.size);
+        for (let i = 0; i < this.size; i++) {
+            _map[i] = new Array(this.size)
+        }
+
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+                _map[i][j] = 1;
+            }
+        }
+        
         let dimensions = this.size - 1, maxLength = 10, maxTunnels = this.size * 3;
 
         // get random position
@@ -92,7 +102,8 @@ export default class Level {
             }
         }
 
-        return _map; // all our tunnels have been created and our _map is complete, so lets return it to our render()
+        this.grid = _map;
+        return _map;
     }
     
     calculatePositions() {
@@ -125,7 +136,5 @@ export default class Level {
 
     getPacmanPosition() {
         return this.pacman_pos;
-    }
-
-    
+    } 
 }

@@ -96,16 +96,87 @@ export default class GameBoard {
         }
     }
 
-    // create method to calculate paths from pacman to ghosts using bfs
-    // give pacman and ghosts their own coordinates
+    changeAlgorithm() {
+        switch (this.finding.algorithm) {
+            case 'bfs':
+                this.finding.algorithm = 'dfs';
+                break;
+            case 'dfs':
+                this.finding.algorithm = 'ucs';
+                break;
+            case 'ucs':
+                this.finding.algorithm = 'bfs';
+                break;
+            default:
+                break;
+        }
+    }
+
+    // render paths depending on selected algorithm
     renderPaths(pacman, ghosts, level) {
-        
-        // ghosts.map(ghost => {
-        //     // bfs for paths from pacman to each ghost
-        //     this.finding.bfs(pacman.pos, ghost.pos, level);
-        // });
-        console.log(this.finding.bfs(pacman.pos, ghosts[0].pos, level));
-        
+        const pacman_pos = coordsFromPos(pacman.pos);
+    
+        if (this.finding.prev_paths.length) {
+            this.finding.prev_paths.map(prev_path => {
+                if (prev_path) {
+                    prev_path.map(x => {
+                        let x_pos = (x[0] * this.grid.length) + x[1];
+                        this.removeObject(x_pos, [OBJECT_TYPE.PATH, OBJECT_TYPE.BLINKY_PATH, OBJECT_TYPE.PINKY_PATH, OBJECT_TYPE.INKY_PATH, OBJECT_TYPE.CLYDE_PATH]);
+                    })
+                }
+                
+            })
+        }
+
+        let iter = 0;
+        ghosts.map(ghost => {
+            let path_color = null;
+            switch (ghost.name) {
+                case OBJECT_TYPE.BLINKY:
+                    path_color = OBJECT_TYPE.BLINKY_PATH;
+                    break;
+                case OBJECT_TYPE.PINKY:
+                    path_color = OBJECT_TYPE.PINKY_PATH;
+                    break;
+                case OBJECT_TYPE.INKY:
+                    path_color = OBJECT_TYPE.INKY_PATH;
+                    break;
+                case OBJECT_TYPE.CLYDE:
+                    path_color = OBJECT_TYPE.CLYDE_PATH;
+                    break;
+                default: 
+                    break;
+            }
+            
+
+            // bfs for paths from pacman to each ghost
+            const ghost_pos = coordsFromPos(ghost.pos);
+            let path = null;
+            switch (this.finding.algorithm) {
+                case 'bfs':
+                    path = this.finding.bfs(level, pacman_pos, ghost_pos);
+                    break;
+                case 'dfs':
+                    path = this.finding.dfs(level, pacman_pos, ghost_pos);
+                    break;
+                case 'ucs':
+                    path = this.finding.bfs(level, pacman_pos, ghost_pos);
+                    break;
+                default:
+                    break;
+            }
+
+            // set new path 
+            this.finding.prev_paths[iter] = path;
+            iter++;
+
+            if (path) {
+                path.map(x => {
+                    let x_pos = (x[0] * this.grid.length) + x[1];
+                    this.addObject(x_pos, [OBJECT_TYPE.PATH, path_color]);
+                })
+            }
+        });
     }
 
     static createGameBoard(DOMGrid, level) {
