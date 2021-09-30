@@ -1,6 +1,7 @@
 export const GRID_SIZE = 20;
 export const CELL_SIZE = 20;
 export const ROUND_END_TIME = 3000;
+export const PILL_COUNT = GRID_SIZE / 5;
 
 export const DIRECTIONS = {
     ArrowLeft: {
@@ -46,6 +47,7 @@ export const OBJECT_TYPE = {
     PINKY_PATH: 'pinky-path',
     INKY_PATH: 'inky-path',
     CLYDE_PATH: 'clyde-path',
+    FOOD: 'food'
 };
 
 export const CLASS_LIST = [
@@ -66,6 +68,7 @@ export const CLASS_LIST = [
     OBJECT_TYPE.PINKY_PATH,
     OBJECT_TYPE.INKY_PATH,
     OBJECT_TYPE.CLYDE_PATH,
+    OBJECT_TYPE.FOOD
 ];
 
 export function coordsFromPos(pos) {

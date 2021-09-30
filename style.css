@@ -40,7 +40,8 @@ body {
 }
 
 .algorithm-name,
-.algorithm-time {
+.algorithm-time,
+.algorithm-info {
     text-align: center;
     color: white;
     padding-bottom: 15px;
@@ -116,6 +117,12 @@ body {
 
 .pill {
     background: white;
+    border: 5px solid black;
+    border-radius: 50%;
+}
+
+.food {
+    background: green;
     border: 5px solid black;
     border-radius: 50%;
 }

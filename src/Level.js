@@ -1,3 +1,4 @@
+import { PILL_COUNT } from './setup.js';
 export default class Level {
     constructor(size) {
         this.size = size;
@@ -92,13 +93,24 @@ export default class Level {
         }
 
         // add boosters
-        let booster_count = 4;
+        let booster_count = PILL_COUNT;
         while(booster_count) {
             let rand_row = Math.floor(Math.random() * ((_map.length - 1) - 1) + 1);
             let rand_col = Math.floor(Math.random() * ((_map.length - 1) - 1) + 1);
             if (_map[rand_row][rand_col] === 2) {
                 _map[rand_row][rand_col] = 7;
                 booster_count--;
+            }
+        }
+
+        // add random point where pacman will go 
+        let safe_point = true;
+        while(safe_point) {
+            let rand_row = Math.floor(Math.random() * ((_map.length - 1) - 1) + 1);
+            let rand_col = Math.floor(Math.random() * ((_map.length - 1) - 1) + 1);
+            if (_map[rand_row][rand_col] === 2) {
+                _map[rand_row][rand_col] = 17;
+                safe_point = false;
             }
         }
 

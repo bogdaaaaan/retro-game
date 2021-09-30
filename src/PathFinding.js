@@ -81,9 +81,7 @@ export default class PathFinding {
                         }
                     }
                 }
-                
             }
-            
         }
         return false;
     }
@@ -133,7 +131,6 @@ export default class PathFinding {
                 return path;
             } 
 
-
             let adjacent = [];
             //check all four directions
             for(let i = 0; i < 4 ;i++) {
@@ -162,14 +159,12 @@ export default class PathFinding {
                     }
 
                     // main difference:
-
                     if (!flag) {
                         new_path.push(...path, node);
                         q.push(new_path);
                     }
                 }
-            }
-                
+            } 
         }
         return false;
     }
@@ -202,9 +197,11 @@ export default class PathFinding {
         //queue
         let q = [];
         
-        function node(coords, cost) {
-            this.coords = coords;
-            this.cost = cost;
+        class node {
+            constructor(coords, cost) {
+                this.coords = coords;
+                this.cost = cost;
+            }
         }
       
         //insert start cell and cost
@@ -231,7 +228,12 @@ export default class PathFinding {
                     path.pop();
                     found = true;
                     final_path = path;
-                    return path;
+                    
+                    let ret_path = [];
+                    for (let i = 0; i < final_path.length; i++) {
+                        ret_path.push(final_path[i].coords);
+                    }
+                    return ret_path;        
                 } 
       
                 let adjacent = [];
@@ -243,7 +245,7 @@ export default class PathFinding {
                     adjacent.push(new node([a,b], cost+1));
                 }
           
-                adjacent.sort((a,b) => (a.cost > b.cost) ? 1 : ((b.cost > a.cost) ? -1 : 0))
+                adjacent.sort((a,b) => (a.cost > b.cost) ? 1 : ((b.cosыt > a.cost) ? -1 : 0))
       
                 adjacent.forEach(_node => {
                     let new_path = [];
@@ -255,7 +257,12 @@ export default class PathFinding {
                             new_path.shift();
                             found = true;
                             final_path = new_path;
-                            return new_path;
+
+                            let ret_path = [];
+                            for (let i = 0; i < final_path.length; i++) {
+                               ret_path.push(final_path[i].coords);
+                            }
+                            return ret_path;
                         }
       
                         let flag = false;
@@ -273,7 +280,104 @@ export default class PathFinding {
                 })                
             }
         }
-        if (found) return final_path;
+        
+        if (found) {
+            let ret_path = [];
+            for (let i = 0; i < final_path.length; i++) {
+                ret_path.push(final_path[i].coords);
+            }
+            return ret_path;
+        }
+        return false;
+    }
+
+    astar (arr, start, end) {
+        let grid = new Array(arr.length);
+        for (let i = 0; i < grid.length; i++) {
+            grid[i] = new Array(arr.length);
+        }
+    
+        for (let x = 0; x < grid.length; x++) {
+            for (let y = 0; y < grid[x].length; y++) {
+                grid[x][y] = {
+                    val: arr[x][y],
+                    pos: [x,y],
+                    f: 0,
+                    g: 0,
+                    h: 0,
+                    parent: null
+                };
+            }
+        }
+    
+        function heuristic (pos0, pos1) {
+            let d1 = Math.abs(pos1.x - pos0.x);
+            let d2 = Math.abs(pos1.y - pos0.y);
+            return d1 + d2;
+        }
+    
+        let start_node = grid[start[0]][start[1]];
+        let end_node = grid[end[0]][end[1]];
+    
+        let openList = [];
+        let closedList = [];
+    
+        openList.push(start_node);
+        while (openList.length > 0) {
+            let lowInd = 0;
+            for (let i = 0; i < openList.length; i++) {
+                if (openList[i].f < openList[lowInd].f) {
+                    lowInd = i;
+                }
+            }
+            let currentNode = openList[lowInd]; 
+            if (currentNode.pos[0] === end_node.pos[0] && currentNode.pos[1] === end_node.pos[1]) {
+                let curr = currentNode;
+                let ret = [];
+                while (curr.parent) {
+                    ret.push(curr.pos);
+                    curr = curr.parent;
+                }
+                ret.reverse();
+                return ret;
+            }
+    
+            openList.splice(openList.indexOf(currentNode), 1);
+            closedList.push(currentNode);
+    
+            const dir = [[0,1], [0,-1], [1,0], [-1,0]];
+            let neighbors = [];
+            for (let i = 0; i < dir.length; i++) {
+                const direction = dir[i];
+                let [a,b] = [currentNode.pos[0] + direction[0], currentNode.pos[1] + direction[1]];
+                if (a > grid.length - 1 || a < 0 || b > grid.length - 1 || b < 0) continue;
+                if (grid[a][b].val === 9 || grid[a][b] === 1) continue;
+                neighbors.push(grid[a][b]);
+            }
+    
+            for (let i = 0; i < neighbors.length; i++) {
+                let neighbor = neighbors[i];
+                if (closedList.indexOf(neighbor) !== -1 || neighbor.val === 9 || neighbor.val === 1) {
+                    continue;
+                }
+                let gScore = currentNode.g + 1;
+                let gScoreIsBest = false;
+    
+                if (openList.indexOf(neighbor) === -1) {
+                    gScoreIsBest = true;
+                    neighbor.h = heuristic(neighbor.pos, end_node.pos);
+                    openList.push(neighbor);
+                } else if (gScore < neighbor.g) {
+                    gScoreIsBest = true;
+                }
+    
+                if (gScoreIsBest) {
+                    neighbor.parent = currentNode;
+                    neighbor.g = gScore;
+                    neighbor.f = neighbor.g + neighbor.h;
+                }
+            }
+        }
         return false;
     }
 }

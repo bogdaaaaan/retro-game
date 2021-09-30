@@ -113,18 +113,27 @@ const checkCollisions = (pacman, ghosts) => {
 };
 
 const gameLoop = (pacman, ghosts) => {
-    gameBoard.moveCharacter(pacman);
+    switch (gameBoard.state) {
+        case 'player':
+            gameBoard.moveCharacter(pacman);
+            break;
+        case 'auto':
+            gameBoard.findPathToFood(pacman, level.grid);
+            break;
+        default:
+            break;
+    }
+    
     checkCollisions(pacman, ghosts);
 
     ghosts.forEach((ghost) => gameBoard.moveCharacter(ghost));
     checkCollisions(pacman, ghosts);
 
-    let startTime = performance.now()
-    gameBoard.renderPaths(pacman, ghosts, level.grid);
-    document.querySelector('.algorithm-name').innerHTML = gameBoard.finding.algorithm;
-    let endTime = performance.now()
-
-    document.querySelector('.algorithm-time').innerHTML = `${(endTime - startTime).toFixed(2)} milliseconds`;
+    // let startTime = performance.now()
+    // gameBoard.renderPaths(pacman, ghosts, level.grid);
+    // let endTime = performance.now()
+    // document.querySelector('.algorithm-name').innerHTML = gameBoard.finding.algorithm;
+    // document.querySelector('.algorithm-time').innerHTML = `${(endTime - startTime).toFixed(2)} milliseconds`;
 
     // Check for dot
     if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.DOT)) {
@@ -192,6 +201,10 @@ const startGame = () => {
     startButton.classList.add('hide');
     status.classList.add('hide');
 
+    // TASK 2 CHANGING GAMEBOARD STATE
+    gameBoard.state = 'auto';
+
+
     gameBoard.createGrid(level.grid);
 
     const pacman = new Pacman(2, PACMAN_START_POS);
@@ -206,9 +219,9 @@ const startGame = () => {
 
     const ghosts = [
         new Ghost(5, GHOST_START_POS[0], randomMovement, OBJECT_TYPE.BLINKY),
-        new Ghost(4, GHOST_START_POS[1], randomMovement, OBJECT_TYPE.PINKY),
-        new Ghost(3, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
-        new Ghost(2, GHOST_START_POS[3], randomMovement, OBJECT_TYPE.CLYDE),
+        //new Ghost(4, GHOST_START_POS[1], randomMovement, OBJECT_TYPE.PINKY),
+        //new Ghost(3, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
+        //new Ghost(2, GHOST_START_POS[3], randomMovement, OBJECT_TYPE.CLYDE),
     ];
 
     timer = setInterval(() => gameLoop(pacman, ghosts), GLOBAL_SPEED);

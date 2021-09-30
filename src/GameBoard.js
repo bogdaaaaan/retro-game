@@ -11,6 +11,8 @@ export default class GameBoard {
         }
 
         this.DOMGrid = DOMGrid;
+        this.state = '';
+        this.path_to_food = [];
     }
 
     showGameStatus(gameWin, lives) {
@@ -76,12 +78,9 @@ export default class GameBoard {
 
     moveCharacter(character) {
         if (character.shouldMove()) {
-            const { nextMovePos, direction } = character.getNextMove(
-                this.objectExist
-            );
+            const { nextMovePos, direction } = character.getNextMove(this.objectExist);
 
-            if (character.pos === nextMovePos && character.dir === direction)
-                return;
+            if (character.pos === nextMovePos && character.dir === direction) return;
             const { classesToRemove, classesToAdd } = character.makeMove();
 
             if (character.rotation && nextMovePos !== character.pos) {
@@ -109,6 +108,26 @@ export default class GameBoard {
                 break;
             default:
                 break;
+        }
+    }
+
+    // find path to food object
+    findPathToFood(pacman, level) {
+        if (this.path_to_food.length === 0) {
+            let to;
+            for (let i = 0; i < level.length; i++) {
+                for (let j = 0; j < level.length; j++) {
+                    if (level[i][j] === 17) {
+                        to = [i,j];
+                    };
+                }
+            }
+            const pacman_pos = coordsFromPos(pacman.pos);
+            const path = this.finding.astar(level, pacman_pos, to);
+            this.path_to_food = [...path];
+        } else {
+            // shift the first from path, detect where pacman should go, use moveCharacter to move pacman
+            // after that, delete food from level, spawn it in another cell 
         }
     }
 
@@ -160,7 +179,7 @@ export default class GameBoard {
                     path = this.finding.dfs(level, pacman_pos, ghost_pos);
                     break;
                 case 'ucs':
-                    path = this.finding.bfs(level, pacman_pos, ghost_pos);
+                    path = this.finding.ucs(level, pacman_pos, ghost_pos);
                     break;
                 default:
                     break;
