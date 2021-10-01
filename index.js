@@ -1,5 +1,5 @@
 import { OBJECT_TYPE, ROUND_END_TIME, GRID_SIZE, coordsFromPos } from './src/setup.js';
-import { randomMovement } from './src/ghostMoves.js';
+import { randomMovement, moveToPacman } from './src/ghostMoves.js';
 
 import GameBoard from './src/GameBoard.js';
 import Pacman from './src/Pacman.js';
@@ -39,6 +39,7 @@ let powerPillTimer = null;
 let ghostAlertTimer = null;
 let alertInterval = null;
 let lives = 3;
+let auto_eaten = false;
 
 // turn off sound
 const playAudio = (sound) => {
@@ -61,7 +62,6 @@ const gameOver = (pacman) => {
 
 const checkCollisions = (pacman, ghosts) => {
     const collidedGhost = ghosts.find((ghost) => pacman.pos === ghost.pos);
-
     if (collidedGhost) {
         if (pacman.powerPill) {
             playAudio(soundGhost);
@@ -84,6 +84,7 @@ const checkCollisions = (pacman, ghosts) => {
             if (!lives) {
                 gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
                 gameBoard.rotateDiv(pacman.pos, 0);
+                auto_eaten = true;
                 gameOver(pacman);
             } else {
                 gameBoard.showGameStatus(gameWin, lives);
@@ -100,7 +101,7 @@ const checkCollisions = (pacman, ghosts) => {
 
                 gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
                 pacman.pos = PACMAN_START_POS;
-
+                auto_eaten = true;
                 setTimeout(() => {
                     timer = setInterval(
                         () => gameLoop(pacman, ghosts),
@@ -116,24 +117,26 @@ const gameLoop = (pacman, ghosts) => {
     switch (gameBoard.state) {
         case 'player':
             gameBoard.moveCharacter(pacman);
+            checkCollisions(pacman, ghosts);
+            ghosts.forEach((ghost) => gameBoard.moveCharacter(ghost));
+            checkCollisions(pacman, ghosts);
             break;
         case 'auto':
-            gameBoard.findPathToFood(pacman, level.grid);
+            gameBoard.findPathToFood(pacman, level.grid, auto_eaten);
+            auto_eaten = false;
+            checkCollisions(pacman, ghosts);
+            ghosts.forEach((ghost) => gameBoard.autoMoveCharacter(ghost, level.grid, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
+            checkCollisions(pacman, ghosts);
             break;
         default:
             break;
     }
     
-    checkCollisions(pacman, ghosts);
-
-    ghosts.forEach((ghost) => gameBoard.moveCharacter(ghost));
-    checkCollisions(pacman, ghosts);
-
-    // let startTime = performance.now()
-    // gameBoard.renderPaths(pacman, ghosts, level.grid);
-    // let endTime = performance.now()
-    // document.querySelector('.algorithm-name').innerHTML = gameBoard.finding.algorithm;
-    // document.querySelector('.algorithm-time').innerHTML = `${(endTime - startTime).toFixed(2)} milliseconds`;
+    let startTime = performance.now()
+    gameBoard.renderPaths(pacman, ghosts, level.grid);
+    let endTime = performance.now()
+    document.querySelector('.algorithm-name').innerHTML = gameBoard.finding.algorithm;
+    document.querySelector('.algorithm-time').innerHTML = `${(endTime - startTime).toFixed(2)} milliseconds`;
 
     // Check for dot
     if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.DOT)) {
@@ -204,7 +207,6 @@ const startGame = () => {
     // TASK 2 CHANGING GAMEBOARD STATE
     gameBoard.state = 'auto';
 
-
     gameBoard.createGrid(level.grid);
 
     const pacman = new Pacman(2, PACMAN_START_POS);
@@ -218,10 +220,10 @@ const startGame = () => {
     });
 
     const ghosts = [
-        new Ghost(5, GHOST_START_POS[0], randomMovement, OBJECT_TYPE.BLINKY),
-        //new Ghost(4, GHOST_START_POS[1], randomMovement, OBJECT_TYPE.PINKY),
-        //new Ghost(3, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
-        //new Ghost(2, GHOST_START_POS[3], randomMovement, OBJECT_TYPE.CLYDE),
+        new Ghost(5, GHOST_START_POS[0], moveToPacman, OBJECT_TYPE.BLINKY),
+        // new Ghost(5, GHOST_START_POS[1], moveToPacman, OBJECT_TYPE.PINKY),
+        // new Ghost(5, GHOST_START_POS[2], moveToPacman, OBJECT_TYPE.INKY),
+        // new Ghost(5, GHOST_START_POS[3], moveToPacman, OBJECT_TYPE.CLYDE),
     ];
 
     timer = setInterval(() => gameLoop(pacman, ghosts), GLOBAL_SPEED);

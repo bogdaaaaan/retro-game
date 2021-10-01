@@ -4,8 +4,36 @@ export default class PathFinding {
         this.prev_paths = [];
     }
 
-    bfs(arr, from, to) {
-        // making array with visited nodes
+    checkIfInGhostLair(level, ghost_pos) {
+        let positions = [];
+        let flag = true;
+        let indx = null;
+        let grid_indx = null;
+
+        level.map(x => {
+            if (flag) {
+                indx = x.indexOf(9);
+                if (indx !== -1) {
+                    flag = false;
+                    grid_indx = level.indexOf(x);
+                }
+            }
+        });
+
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                positions.push([grid_indx + i, indx + j]);
+            }
+        }
+
+        let includes = false;
+        positions.map(el => {
+            if (el[0] === ghost_pos[0] && el[1] === ghost_pos[1]) includes = true;
+        })
+        return includes;
+    }
+
+    prep(arr) {
         let visited = [];
         for (let i = 0; i < arr.length; i++) {
             visited[i] = [];
@@ -25,13 +53,14 @@ export default class PathFinding {
             }
         }
 
-        //directions
-        // right, left, down, up
-        const dir = [ [0,1], [0,-1], [1,0], [-1,0]];
+        return {visited: visited, directions:  [[0,1], [0,-1], [1,0], [-1,0]], queue: []};
+    }
 
-        //queue
-        let q = [];
-        
+    bfs(arr, from, to) {
+        if (this.checkIfInGhostLair(arr, to)) return;
+        let props = this.prep(arr);
+        let visited = props.visited, dir = props.directions, q = props.queue;
+
         //insert start cell 
         q.push([from]);
 
@@ -87,31 +116,9 @@ export default class PathFinding {
     }
 
     dfs(arr, from, to) {
-        // making array with visited nodes
-        let visited = [];
-        for (let i = 0; i < arr.length; i++) {
-            visited[i] = [];
-        }
-
-        for (let i = 0; i < arr.length; i++) {
-            for (let j = 0; j < arr[i].length; j++) {
-                switch (arr[i][j]) {
-                    case 1:
-                    case 9:
-                        visited[i][j] = true;
-                        break;
-                    default:
-                        visited[i][j] = false;
-                        break;
-                }
-            }
-        }
-
-        //directions
-        // right, left, down, up
-        const dir = [ [0,1], [0,-1], [1,0], [-1,0]];
-        //queue
-        let q = [];
+        if (this.checkIfInGhostLair(arr, to)) return;
+        let props = this.prep(arr);
+        let visited = props.visited, dir = props.directions, q = props.queue;
         
         //insert start cell
         q.push([from]);
@@ -170,32 +177,10 @@ export default class PathFinding {
     }
 
     ucs(arr, from, to) {
+        if (this.checkIfInGhostLair(arr, to)) return;
         // making array with visited nodes
-        let visited = [];
-        for (let i = 0; i < arr.length; i++) {
-            visited[i] = [];
-        }
-      
-        for (let i = 0; i < arr.length; i++) {
-            for (let j = 0; j < arr[i].length; j++) {
-                switch (arr[i][j]) {
-                    case 1:
-                    case 9:
-                        visited[i][j] = true;
-                        break;
-                    default:
-                        visited[i][j] = false;
-                        break;
-                }
-            }
-        }
-      
-        //directions
-        // right, left, down, up
-        const dir = [ [0,1], [0,-1], [1,0], [-1,0]];
-      
-        //queue
-        let q = [];
+        let props = this.prep(arr);
+        let visited = props.visited, dir = props.directions, q = props.queue;
         
         class node {
             constructor(coords, cost) {
@@ -292,6 +277,7 @@ export default class PathFinding {
     }
 
     astar (arr, start, end) {
+        // create copy of given array
         let grid = new Array(arr.length);
         for (let i = 0; i < grid.length; i++) {
             grid[i] = new Array(arr.length);
@@ -299,6 +285,7 @@ export default class PathFinding {
     
         for (let x = 0; x < grid.length; x++) {
             for (let y = 0; y < grid[x].length; y++) {
+                // set cell as object with value, position, f, g, h values and parent node
                 grid[x][y] = {
                     val: arr[x][y],
                     pos: [x,y],
@@ -310,12 +297,14 @@ export default class PathFinding {
             }
         }
     
+        // heuristic function
         function heuristic (pos0, pos1) {
             let d1 = Math.abs(pos1.x - pos0.x);
             let d2 = Math.abs(pos1.y - pos0.y);
             return d1 + d2;
         }
     
+        // create start and end nodes with open nd closed lists to visit
         let start_node = grid[start[0]][start[1]];
         let end_node = grid[end[0]][end[1]];
     
@@ -323,13 +312,17 @@ export default class PathFinding {
         let closedList = [];
     
         openList.push(start_node);
+        // until we search all available nodes
         while (openList.length > 0) {
+            // get the first one in list
             let lowInd = 0;
             for (let i = 0; i < openList.length; i++) {
                 if (openList[i].f < openList[lowInd].f) {
                     lowInd = i;
                 }
             }
+
+            // in case we arrived at end node
             let currentNode = openList[lowInd]; 
             if (currentNode.pos[0] === end_node.pos[0] && currentNode.pos[1] === end_node.pos[1]) {
                 let curr = currentNode;
@@ -338,13 +331,17 @@ export default class PathFinding {
                     ret.push(curr.pos);
                     curr = curr.parent;
                 }
+
+                // return reversed path 
                 ret.reverse();
                 return ret;
             }
     
+            // delete node tht we visited from open list nd add it to closed 
             openList.splice(openList.indexOf(currentNode), 1);
             closedList.push(currentNode);
     
+            // find all available nodes to visit from current node
             const dir = [[0,1], [0,-1], [1,0], [-1,0]];
             let neighbors = [];
             for (let i = 0; i < dir.length; i++) {
@@ -355,6 +352,7 @@ export default class PathFinding {
                 neighbors.push(grid[a][b]);
             }
     
+            // check all neighbors if they are valid
             for (let i = 0; i < neighbors.length; i++) {
                 let neighbor = neighbors[i];
                 if (closedList.indexOf(neighbor) !== -1 || neighbor.val === 9 || neighbor.val === 1) {
@@ -363,6 +361,7 @@ export default class PathFinding {
                 let gScore = currentNode.g + 1;
                 let gScoreIsBest = false;
     
+                // if neighbor is closer to end node set him as our next node to visit
                 if (openList.indexOf(neighbor) === -1) {
                     gScoreIsBest = true;
                     neighbor.h = heuristic(neighbor.pos, end_node.pos);

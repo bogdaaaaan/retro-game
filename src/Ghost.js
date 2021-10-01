@@ -28,11 +28,12 @@ export default class Ghost {
         return false;
     }
 
-    getNextMove(objectExist) {
+    getNextMove(objectExist, auto_path) {
         const { nextMovePos, direction } = this.movement(
             this.pos,
             this.dir,
-            objectExist
+            objectExist,
+            auto_path
         );
 
         return { nextMovePos, direction };

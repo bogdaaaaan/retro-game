@@ -72,6 +72,7 @@ export const CLASS_LIST = [
 ];
 
 export function coordsFromPos(pos) {
+    if (Array.isArray(pos)) return pos;
     return [(pos - (pos % GRID_SIZE)) / GRID_SIZE, pos % GRID_SIZE];
 }
 

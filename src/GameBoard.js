@@ -13,6 +13,7 @@ export default class GameBoard {
         this.DOMGrid = DOMGrid;
         this.state = '';
         this.path_to_food = [];
+        this.prev_food_pos = null;
     }
 
     showGameStatus(gameWin, lives) {
@@ -95,6 +96,40 @@ export default class GameBoard {
         }
     }
 
+    autoMoveCharacter(character, level, pacman_pos, ghost_pos) {
+        if (character.shouldMove()) {
+            let path;
+
+            switch (this.finding.algorithm) {
+                case 'bfs':
+                    path = this.finding.bfs(level, pacman_pos, ghost_pos);
+                    break;
+                case 'dfs':
+                    path = this.finding.dfs(level, pacman_pos, ghost_pos);
+                    break;
+                case 'ucs':
+                    path = this.finding.ucs(level, pacman_pos, ghost_pos);
+                    break;
+                default:
+                    break;
+            }
+
+            const { nextMovePos, direction } = !path ? character.getNextMove(this.objectExist) : character.getNextMove(this.objectExist, path.pop());
+            if (character.pos === nextMovePos && character.dir === direction) return;
+            const { classesToRemove, classesToAdd } = character.makeMove();
+
+            if (character.rotation && nextMovePos !== character.pos) {
+                this.rotateDiv(nextMovePos, character.dir.rotation);
+                this.rotateDiv(character.pos, 0);
+            }
+
+            this.removeObject(character.pos, classesToRemove);
+            this.addObject(nextMovePos, classesToAdd);
+
+            character.setNewPos(nextMovePos, direction);
+        }
+    }
+
     changeAlgorithm() {
         switch (this.finding.algorithm) {
             case 'bfs':
@@ -112,22 +147,94 @@ export default class GameBoard {
     }
 
     // find path to food object
-    findPathToFood(pacman, level) {
-        if (this.path_to_food.length === 0) {
-            let to;
-            for (let i = 0; i < level.length; i++) {
-                for (let j = 0; j < level.length; j++) {
-                    if (level[i][j] === 17) {
-                        to = [i,j];
-                    };
+    findPathToFood(pacman, level, auto_eaten) {
+        if (auto_eaten) {
+            this.path_to_food = [];
+            
+        }
+        // add random point where pacman will go 
+        function spawn_food() {
+            let safe_point = true;
+            let to = null;
+            while(safe_point) {
+                let rand_row = Math.floor(Math.random() * ((level.length - 1) - 1) + 1);
+                let rand_col = Math.floor(Math.random() * ((level.length - 1) - 1) + 1);
+                if (level[rand_row][rand_col] === 2 || level[rand_row][rand_col] === 0) {
+                    to = [rand_row, rand_col];
+                    safe_point = false;
+                    return to;
                 }
             }
-            const pacman_pos = coordsFromPos(pacman.pos);
+        }
+        
+
+        // find path to that point
+        const pacman_pos = coordsFromPos(pacman.pos);
+        if (this.path_to_food.length === 0) {
+            let to = null;
+            if (auto_eaten) {
+                to = this.prev_food_pos;
+            } else {
+                to = spawn_food();
+                this.prev_food_pos = to;
+            }
+            this.addObject(to, [OBJECT_TYPE.FOOD])
             const path = this.finding.astar(level, pacman_pos, to);
             this.path_to_food = [...path];
         } else {
-            // shift the first from path, detect where pacman should go, use moveCharacter to move pacman
-            // after that, delete food from level, spawn it in another cell 
+            // in case we have one more move before getting food, delete it from board
+            pacman.dir = {
+                code: 37,
+                movement: -1,
+                rotation: 180
+            };
+            if (pacman.shouldMove()) {
+                let next_pos = this.path_to_food.shift();
+                
+                let rotation = 0;
+                let movement = 0;
+                let code = 0;
+
+                if (next_pos[0] === pacman_pos[0] && next_pos[1] > pacman_pos[1]) {
+                    code = 39;
+                    movement = 1;
+                    rotation = 0;
+                } else if (next_pos[0] === pacman_pos[0] && next_pos[1] < pacman_pos[1]) {
+                    code = 37;
+                    movement = -1;
+                    rotation = 180;
+                } else if (next_pos[0] > pacman_pos[0] && next_pos[1] === pacman_pos[1]) {
+                    code = 40;
+                    movement = level.length;
+                    rotation = 90;
+                } else if (next_pos[0] < pacman_pos[0] && next_pos[1] === pacman_pos[1]) {
+                    code = 38;
+                    movement = -level.length;
+                    rotation = 270;
+                }
+
+                pacman.dir = {
+                     code,
+                     movement,
+                     rotation
+                };
+
+
+                const { classesToRemove, classesToAdd } = pacman.makeMove();
+                if (pacman.rotation && next_pos !== pacman.pos) {
+                    this.rotateDiv(next_pos, pacman.dir.rotation);
+                    this.rotateDiv(pacman.pos, 0);
+                }
+    
+                this.removeObject(pacman.pos, classesToRemove);
+                this.addObject(next_pos, classesToAdd);
+    
+                pacman.setNewPos(next_pos[0] * level.length + next_pos[1]);
+                if (this.path_to_food.length === 0) {
+                    this.removeObject(next_pos, [OBJECT_TYPE.FOOD])
+                    level[next_pos[0]][next_pos[1]] = 0;
+                }
+            }
         }
     }
 
