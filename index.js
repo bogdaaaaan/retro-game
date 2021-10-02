@@ -125,7 +125,7 @@ const gameLoop = (pacman, ghosts) => {
             gameBoard.findPathToFood(pacman, level.grid, auto_eaten);
             auto_eaten = false;
             checkCollisions(pacman, ghosts);
-            ghosts.forEach((ghost) => gameBoard.autoMoveCharacter(ghost, level.grid, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
+            ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level.grid, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
             checkCollisions(pacman, ghosts);
             break;
         default:
@@ -220,10 +220,10 @@ const startGame = () => {
     });
 
     const ghosts = [
-        new Ghost(5, GHOST_START_POS[0], moveToPacman, OBJECT_TYPE.BLINKY),
-        // new Ghost(5, GHOST_START_POS[1], moveToPacman, OBJECT_TYPE.PINKY),
-        // new Ghost(5, GHOST_START_POS[2], moveToPacman, OBJECT_TYPE.INKY),
-        // new Ghost(5, GHOST_START_POS[3], moveToPacman, OBJECT_TYPE.CLYDE),
+        //new Ghost(6, GHOST_START_POS[0], moveToPacman, OBJECT_TYPE.BLINKY),
+        //new Ghost(5, GHOST_START_POS[1], moveToPacman, OBJECT_TYPE.PINKY),
+        //new Ghost(4, GHOST_START_POS[2], moveToPacman, OBJECT_TYPE.INKY),
+        new Ghost(3, GHOST_START_POS[3], moveToPacman, OBJECT_TYPE.CLYDE),
     ];
 
     timer = setInterval(() => gameLoop(pacman, ghosts), GLOBAL_SPEED);

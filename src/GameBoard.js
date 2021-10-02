@@ -96,8 +96,8 @@ export default class GameBoard {
         }
     }
 
-    autoMoveCharacter(character, level, pacman_pos, ghost_pos) {
-        if (character.shouldMove()) {
+    autoMoveGhost(ghost, level, pacman_pos, ghost_pos) {
+        if (ghost.shouldMove()) {
             let path;
 
             switch (this.finding.algorithm) {
@@ -114,19 +114,21 @@ export default class GameBoard {
                     break;
             }
 
-            const { nextMovePos, direction } = !path ? character.getNextMove(this.objectExist) : character.getNextMove(this.objectExist, path.pop());
-            if (character.pos === nextMovePos && character.dir === direction) return;
-            const { classesToRemove, classesToAdd } = character.makeMove();
+            if (path && path.length <= Math.floor((level.length / ghost.speed) + ghost.speed)) console.log('reacting to pacman...');
+            const {nextMovePos, direction} = path && path.length <= Math.floor((level.length / ghost.speed) + ghost.speed) ? ghost.getNextMove(this.objectExist, path.pop()) : ghost.getNextMove(this.objectExist);
 
-            if (character.rotation && nextMovePos !== character.pos) {
-                this.rotateDiv(nextMovePos, character.dir.rotation);
-                this.rotateDiv(character.pos, 0);
+            if (ghost.pos === nextMovePos && ghost.dir === direction) return;
+            const { classesToRemove, classesToAdd } = ghost.makeMove();
+
+            if (ghost.rotation && nextMovePos !== ghost.pos) {
+                this.rotateDiv(nextMovePos, ghost.dir.rotation);
+                this.rotateDiv(ghost.pos, 0);
             }
 
-            this.removeObject(character.pos, classesToRemove);
+            this.removeObject(ghost.pos, classesToRemove);
             this.addObject(nextMovePos, classesToAdd);
 
-            character.setNewPos(nextMovePos, direction);
+            ghost.setNewPos(nextMovePos, direction);
         }
     }
 
@@ -150,7 +152,6 @@ export default class GameBoard {
     findPathToFood(pacman, level, auto_eaten) {
         if (auto_eaten) {
             this.path_to_food = [];
-            
         }
         // add random point where pacman will go 
         function spawn_food() {
