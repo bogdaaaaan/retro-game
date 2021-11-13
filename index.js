@@ -128,6 +128,14 @@ const gameLoop = (pacman, ghosts) => {
             ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level.grid, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
             checkCollisions(pacman, ghosts);
             break;
+        case 'minimax':
+            let score_copy = score;
+            gameBoard.minimax(pacman, level.grid, ghosts, score_copy);
+            score--;    
+            checkCollisions(pacman, ghosts);
+            ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level.grid, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
+            checkCollisions(pacman, ghosts);
+            break;
         default:
             break;
     }
@@ -205,7 +213,7 @@ const startGame = () => {
     status.classList.add('hide');
 
     // TASK 2 CHANGING GAMEBOARD STATE
-    gameBoard.state = 'auto';
+    gameBoard.state = 'minimax';
 
     gameBoard.createGrid(level.grid);
 
@@ -222,7 +230,7 @@ const startGame = () => {
     const ghosts = [
         //new Ghost(6, GHOST_START_POS[0], moveToPacman, OBJECT_TYPE.BLINKY),
         //new Ghost(5, GHOST_START_POS[1], moveToPacman, OBJECT_TYPE.PINKY),
-        //new Ghost(4, GHOST_START_POS[2], moveToPacman, OBJECT_TYPE.INKY),
+        new Ghost(4, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
         new Ghost(3, GHOST_START_POS[3], moveToPacman, OBJECT_TYPE.CLYDE),
     ];
 

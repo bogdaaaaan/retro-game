@@ -1,4 +1,4 @@
-import { PILL_COUNT } from './setup.js';
+import { coordsFromPos, PILL_COUNT } from './setup.js';
 export default class Level {
     constructor(size) {
         this.size = size;
@@ -128,6 +128,8 @@ export default class Level {
         }
         this.ghosts_pos = positions;
         this.pacman_pos = (positions[positions.length - 1]) + (this.size * 2) - 2;
+        let pacman_coords = coordsFromPos(this.pacman_pos);
+        this.grid[pacman_coords[0]][pacman_coords[1]] = 0;
         return [this.pacman_pos, this.ghosts_pos];
     }
 

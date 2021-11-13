@@ -96,6 +96,161 @@ export default class GameBoard {
         }
     }
 
+    minimax(pacman, level, ghosts, score) {
+        pacman.dir = {
+            code: 37,
+            movement: -1,
+            rotation: 180
+        };
+
+        if (!pacman.shouldMove()) return;
+        const max_depth = 11;
+
+        let moves = pacman.isThereMoves(this.objectExist);
+        let best_move = null, best_move_score = 0, new_best_move_score = 0;
+        
+        for (let i = 0; i < moves.length; i++) {
+            new_best_move_score = this.alphaBetaPruning(max_depth, level, pacman, ghosts, score, moves[i]);
+
+            if (best_move_score < new_best_move_score) {
+                best_move_score = new_best_move_score;
+                best_move = moves[i];
+            }
+            debugger;
+        }
+
+        let [x, y] = coordsFromPos(best_move);
+        level[x][y] = 0;
+
+        const { classesToRemove, classesToAdd } = pacman.makeMove();
+        this.removeObject(pacman.pos, classesToRemove);
+        pacman.setNewPos(best_move);
+        this.addObject(best_move, classesToAdd);
+
+        console.log('move done at ' + best_move + ' with best score at ' + best_move_score);
+    }
+
+    isWinner(level) {
+        let dot_count = 0;
+        for (let i = 0; i < level.length; i++) {
+            for (let j = 0; j < level[i].length; j++) {
+                if (level[i][j] === 2 || level[i][j] === 7) {
+                    dot_count++;
+                }
+            }
+        }
+        return dot_count ? false : true;
+    }
+
+    alphaBetaPruning(depth, level, pacman, ghosts, score, move, alpha = Infinity, beta = -Infinity, isMaximizing = true) {
+        if (this.isWinner(level)) {
+            return score + 500;
+        }
+        if (depth === 0) {
+            return score;
+        }
+        
+        if (isMaximizing) {
+            let best = beta;
+            let prev_move = pacman.pos;
+            pacman.pos = move;
+
+            let [x,y] = coordsFromPos(move);
+            let eaten = level[x][y];
+            level[x][y] = 0;
+            switch(eaten) {
+                case 2:
+                    score += 10;
+                    break;
+                case 7:
+                    score += 50;
+                    break;
+                default: 
+                    break;
+            }
+
+            for (let i = 0; i < ghosts.length; i++) {
+                const ghost = ghosts[i];
+                if (pacman.pos === ghost.pos) {
+                    if (ghost.isScared) {
+                        score+=100;
+                    } else {
+                        score-=300;
+                    }
+                    
+                }
+            }
+
+            score--;
+
+            let available_moves = pacman.isThereMoves(this.objectExist);
+
+            let value = 0;
+
+            for (let i = 0; i < available_moves.length; i++) {
+                const next_move = available_moves[i];
+                value = this.alphaBetaPruning(depth-1, level, pacman, ghosts, score, next_move, alpha, beta, false);
+                best = Math.max(best, value);
+
+                beta = Math.max(beta, best);
+                if (alpha <= beta) break;
+            }
+
+            score++;
+            level[x][y] = eaten;
+            pacman.pos = prev_move;
+
+            return best;
+        } else {
+            let best = alpha;
+            
+            // save moves before ghost turn
+            let prev_moves = [];
+            for (let i = 0; i < ghosts.length; i++) {
+                const ghost = ghosts[i];
+                prev_moves.push(ghost.pos);
+            }
+
+            // find available moves
+            let actions_to_take = [];
+            for (let i = 0; i < ghosts.length; i++) {
+                const ghost = ghosts[i];
+                actions_to_take[i] = ghost.isThereMoves(this.objectExist);
+            }
+
+            // combine them into one array of all moves 
+            let combinations = actions_to_take.reduce((acc, curr) => { 
+                let result = [];
+                acc.map(obj => {
+                    curr.map(obj_1 => {
+                        result.push([obj, obj_1]) 
+                    });
+                });
+                return result;
+            })
+            
+            let value = 0;
+
+            for (let i = 0; i < combinations.length; i++) {
+                let combo = combinations[i];
+                for (let j = 0; j < ghosts.length; j++) ghosts[j].pos = combo[j];
+
+                value = this.alphaBetaPruning(depth-1, level, pacman, ghosts, score, move, alpha, beta, true);
+
+                best = Math.min(best, value)
+                alpha = Math.min(alpha, best);
+                if (beta <= alpha) break;
+            }
+
+            for (let i = 0; i < ghosts.length; i++) {
+                const ghost = ghosts[i];
+                ghost.pos = prev_moves[i];
+            }
+            
+            return best;
+        }
+    }
+
     autoMoveGhost(ghost, level, pacman_pos, ghost_pos) {
         if (ghost.shouldMove()) {
             let path;
@@ -114,7 +269,6 @@ export default class GameBoard {
                     break;
             }
 
-            if (path && path.length <= Math.floor((level.length / ghost.speed) + ghost.speed)) console.log('reacting to pacman...');
             const {nextMovePos, direction} = path && path.length <= Math.floor((level.length / ghost.speed) + ghost.speed) ? ghost.getNextMove(this.objectExist, path.pop()) : ghost.getNextMove(this.objectExist);
 
             if (ghost.pos === nextMovePos && ghost.dir === direction) return;

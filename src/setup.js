@@ -1,4 +1,4 @@
-export const GRID_SIZE = 20;
+export const GRID_SIZE = 10;
 export const CELL_SIZE = 20;
 export const ROUND_END_TIME = 3000;
 export const PILL_COUNT = GRID_SIZE / 5;
@@ -75,6 +75,7 @@ export function coordsFromPos(pos) {
     if (Array.isArray(pos)) return pos;
     return [(pos - (pos % GRID_SIZE)) / GRID_SIZE, pos % GRID_SIZE];
 }
+
 
 export const LEVEL = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],

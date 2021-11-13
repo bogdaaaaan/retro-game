@@ -285,6 +285,7 @@ export default class PathFinding {
     
         for (let x = 0; x < grid.length; x++) {
             for (let y = 0; y < grid[x].length; y++) {
+                // g - расстояние от начальной точки до текущей точки, h - расстояние от текущей точки до целевой
                 // set cell as object with value, position, f, g, h values and parent node
                 grid[x][y] = {
                     val: arr[x][y],

@@ -15,6 +15,15 @@ export default class Ghost {
         this.rotation = false;
     }
 
+    isThereMoves(objectExist) {
+        let moves = [];
+        if (!objectExist(this.pos + 1, OBJECT_TYPE.WALL) && !objectExist(this.pos + 1, OBJECT_TYPE.GHOST)) moves.push(this.pos + 1);
+        if (!objectExist(this.pos - 1, OBJECT_TYPE.WALL) && !objectExist(this.pos - 1, OBJECT_TYPE.GHOST)) moves.push(this.pos - 1);
+        if (!objectExist(this.pos + GRID_SIZE, OBJECT_TYPE.WALL) && !objectExist(this.pos + GRID_SIZE, OBJECT_TYPE.GHOST)) moves.push(this.pos + GRID_SIZE);
+        if (!objectExist(this.pos - GRID_SIZE, OBJECT_TYPE.WALL) && !objectExist(this.pos - GRID_SIZE, OBJECT_TYPE.GHOST)) moves.push(this.pos - GRID_SIZE);
+        return moves;
+    }
+
     getCoordinates() {
         return [(this.pos - (this.pos % GRID_SIZE)) / GRID_SIZE, this.pos % GRID_SIZE];
     }
