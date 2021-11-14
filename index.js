@@ -38,7 +38,6 @@ let powerPillActive = false;
 let powerPillTimer = null;
 let ghostAlertTimer = null;
 let alertInterval = null;
-let lives = 3;
 let auto_eaten = false;
 
 // turn off sound
@@ -60,6 +59,20 @@ const gameOver = (pacman) => {
     livesInfo.classList.add('hide');
 };
 
+const getLevelCopy = () => {
+    let level_copy = new Array(level.grid.length);
+    for (let i = 0; i < level_copy.length; i++) {
+        level_copy[i] = new Array(level.grid[i].length);
+    }
+
+    for (let i = 0; i < level_copy.length; i++) {
+        for (let j = 0; j < level_copy.length; j++) {
+            level_copy[i][j] = level.grid[i][j];
+        }
+    }
+    return level_copy;
+}
+
 const checkCollisions = (pacman, ghosts) => {
     const collidedGhost = ghosts.find((ghost) => pacman.pos === ghost.pos);
     if (collidedGhost) {
@@ -79,15 +92,15 @@ const checkCollisions = (pacman, ghosts) => {
             });
         } else {
             // If you have lives continue playing from start pos
-            lives--;
-            if (lives) livesInfo.removeChild(livesInfo.lastElementChild);
-            if (!lives) {
+            pacman.lives--;
+            if (pacman.lives) livesInfo.removeChild(livesInfo.lastElementChild);
+            if (!pacman.lives) {
                 gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
                 gameBoard.rotateDiv(pacman.pos, 0);
                 auto_eaten = true;
                 gameOver(pacman);
             } else {
-                gameBoard.showGameStatus(gameWin, lives);
+                gameBoard.showGameStatus(gameWin, pacman.lives);
                 clearInterval(timer);
                 ghosts.forEach((ghost) => {
                     gameBoard.removeObject(ghost.pos, [
@@ -102,9 +115,10 @@ const checkCollisions = (pacman, ghosts) => {
                 gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
                 pacman.pos = PACMAN_START_POS;
                 auto_eaten = true;
+
                 setTimeout(() => {
                     timer = setInterval(
-                        () => gameLoop(pacman, ghosts),
+                        () => gameLoop(pacman, ghosts, getLevelCopy()),
                         GLOBAL_SPEED
                     );
                 }, ROUND_END_TIME);
@@ -113,7 +127,7 @@ const checkCollisions = (pacman, ghosts) => {
     }
 };
 
-const gameLoop = (pacman, ghosts) => {
+const gameLoop = (pacman, ghosts, level_copy) => {
     switch (gameBoard.state) {
         case 'player':
             gameBoard.moveCharacter(pacman);
@@ -122,18 +136,18 @@ const gameLoop = (pacman, ghosts) => {
             checkCollisions(pacman, ghosts);
             break;
         case 'auto':
-            gameBoard.findPathToFood(pacman, level.grid, auto_eaten);
+            gameBoard.findPathToFood(pacman, level_copy, auto_eaten);
             auto_eaten = false;
             checkCollisions(pacman, ghosts);
-            ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level.grid, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
+            ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level_copy, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
             checkCollisions(pacman, ghosts);
             break;
         case 'minimax':
             let score_copy = score;
-            gameBoard.minimax(pacman, level.grid, ghosts, score_copy);
+            gameBoard.minimax(pacman, level_copy, ghosts, score_copy);
             score--;    
             checkCollisions(pacman, ghosts);
-            ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level.grid, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
+            ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level_copy, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
             checkCollisions(pacman, ghosts);
             break;
         default:
@@ -141,7 +155,7 @@ const gameLoop = (pacman, ghosts) => {
     }
     
     let startTime = performance.now()
-    gameBoard.renderPaths(pacman, ghosts, level.grid);
+    gameBoard.renderPaths(pacman, ghosts, level_copy);
     let endTime = performance.now()
     document.querySelector('.algorithm-name').innerHTML = gameBoard.finding.algorithm;
     document.querySelector('.algorithm-time').innerHTML = `${(endTime - startTime).toFixed(2)} milliseconds`;
@@ -203,7 +217,6 @@ const gameLoop = (pacman, ghosts) => {
 const startGame = () => {
     playAudio(soundGameStart);
 
-    lives = 3;
     gameWin = false;
     powerPillActive = false;
     score = 0;
@@ -228,13 +241,13 @@ const startGame = () => {
     });
 
     const ghosts = [
-        //new Ghost(6, GHOST_START_POS[0], moveToPacman, OBJECT_TYPE.BLINKY),
-        //new Ghost(5, GHOST_START_POS[1], moveToPacman, OBJECT_TYPE.PINKY),
+        new Ghost(6, GHOST_START_POS[0], moveToPacman, OBJECT_TYPE.BLINKY),
+        //new Ghost(5, GHOST_START_POS[1], randomMovement, OBJECT_TYPE.PINKY),
         new Ghost(4, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
         new Ghost(3, GHOST_START_POS[3], moveToPacman, OBJECT_TYPE.CLYDE),
     ];
 
-    timer = setInterval(() => gameLoop(pacman, ghosts), GLOBAL_SPEED);
+    timer = setInterval(() => gameLoop(pacman, ghosts, getLevelCopy()), GLOBAL_SPEED);
 };
 
 // Initialize game

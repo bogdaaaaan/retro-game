@@ -14,6 +14,7 @@ export default class GameBoard {
         this.state = '';
         this.path_to_food = [];
         this.prev_food_pos = null;
+        this.ghost_paths = [];
     }
 
     showGameStatus(gameWin, lives) {
@@ -104,14 +105,15 @@ export default class GameBoard {
         };
 
         if (!pacman.shouldMove()) return;
-        const max_depth = 11;
+        const max_depth = (level.length - 2)*2;
 
         let moves = pacman.isThereMoves(this.objectExist);
         let best_move = null, best_move_score = 0, new_best_move_score = 0;
-        
+        if (moves.length === 0) best_move = pacman.pos;
         for (let i = 0; i < moves.length; i++) {
-            new_best_move_score = this.alphaBetaPruning(max_depth, level, pacman, ghosts, score, moves[i]);
-
+            let path = [moves[i]];
+            new_best_move_score = this.alphaBetaPruning(max_depth, level, pacman, ghosts, score, moves[i], path);
+            
             if (best_move_score < new_best_move_score) {
                 best_move_score = new_best_move_score;
                 best_move = moves[i];
@@ -142,19 +144,59 @@ export default class GameBoard {
         return dot_count ? false : true;
     }
 
-    alphaBetaPruning(depth, level, pacman, ghosts, score, move, alpha = Infinity, beta = -Infinity, isMaximizing = true) {
-        if (this.isWinner(level)) {
-            return score + 500;
+    evaluate(depth, level, pacman, ghosts, score) {
+        let result_score = 0;
+        // finishing earlier is better
+        result_score += depth * 100;
+        
+        let dot_count = 0;
+        let pill_count = 0;
+        for (let i = 0; i < level.length; i++) {
+            for (let j = 0; j < level[i].length; j++) {
+                if (level[i][j] === 2) dot_count++;
+                if (level[i][j] === 7) pill_count++;
+            }
         }
-        if (depth === 0) {
-            return score;
+        // having less dots is better
+        result_score -= (dot_count * 10);
+        // having more pills is better
+        result_score += (pill_count * 50);
+        // being on empty squares is worse 
+
+        for (let i = 0; i < ghosts.length; i++) {
+            const ghost = ghosts[i];
+            const path_length = this.ghost_paths[ghost.name] ? this.ghost_paths[ghost.name].length : 0;
+            // having ghost in prison is better
+            if (!path_length && ghost.pos !== pacman.pos) {
+                result_score += 50;
+            }
+            // being far from ghost is better when ghosts is not scared and vice versa
+            if (ghost.isScared) {
+                result_score += ((level.length * 30) - (path_length * 10));
+            } else {
+                result_score += (path_length * 10);
+            }
+        }
+        return score + result_score;
+    }
+
+    alphaBetaPruning(depth, level, pacman, ghosts, score, move, path, alpha = Infinity, beta = -Infinity, isMaximizing = true) {
+        //console.log('Current depth is: ', depth, ', current score is: ', score, ', current move is: ', move);
+
+        if (this.isWinner(level)) {
+            //console.log(path);
+            return this.evaluate(depth, level, pacman, ghosts, score) + 500;
+        } else if (depth === 0) {
+            //console.log(path);
+            return this.evaluate(depth, level, pacman, ghosts, score);
         }
         
         if (isMaximizing) {
             let best = beta;
+            let prev_score = score;
             let prev_move = pacman.pos;
             pacman.pos = move;
-
+            
             let [x,y] = coordsFromPos(move);
             let eaten = level[x][y];
             level[x][y] = 0;
@@ -165,6 +207,9 @@ export default class GameBoard {
                 case 7:
                     score += 50;
                     break;
+                case 0: 
+                    score -= 10;
+                    break;
                 default: 
                     break;
             }
@@ -173,11 +218,10 @@ export default class GameBoard {
                 const ghost = ghosts[i];
                 if (pacman.pos === ghost.pos) {
                     if (ghost.isScared) {
-                        score+=100;
+                        score += 100;
                     } else {
-                        score-=300;
+                        score -= 500;
                     }
-                    
                 }
             }
 
@@ -189,14 +233,16 @@ export default class GameBoard {
 
             for (let i = 0; i < available_moves.length; i++) {
                 const next_move = available_moves[i];
-                value = this.alphaBetaPruning(depth-1, level, pacman, ghosts, score, next_move, alpha, beta, false);
+                path.push(next_move);
+                value = this.alphaBetaPruning(depth-1, level, pacman, ghosts, score, next_move, path, alpha, beta, false);
+                path.pop();
                 best = Math.max(best, value);
 
                 beta = Math.max(beta, best);
                 if (alpha <= beta) break;
             }
 
-            score++;
+            score = prev_score;
             level[x][y] = eaten;
             pacman.pos = prev_move;
 
@@ -219,23 +265,35 @@ export default class GameBoard {
             }
 
             // combine them into one array of all moves 
-            let combinations = actions_to_take.reduce((acc, curr) => { 
-                let result = [];
-                acc.map(obj => {
-                    curr.map(obj_1 => {
-                        result.push([obj, obj_1]) 
-                    });
+            function allPossibleCases(arr) {
+                if (arr.length == 1) {
+                  return arr[0];
+                } else {
+                  var result = [];
+                  var allCasesOfRest = allPossibleCases(arr.slice(1));  // recur with the rest of array
+                  for (var i = 0; i < allCasesOfRest.length; i++) {
+                    for (var j = 0; j < arr[0].length; j++) {
+                      result.push(arr[0][j] + ',' + allCasesOfRest[i]);
+                    }
+                  }
+                  return result;
+                }
+              
+            }
+            let combinations = allPossibleCases(actions_to_take);
+            combinations = combinations.map(x => {
+                x = x.split(',').map(e => {
+                    return Number(e);
                 });
-                return result;
-            })
-            
+                return x;
+            });
             let value = 0;
 
             for (let i = 0; i < combinations.length; i++) {
                 let combo = combinations[i];
                 for (let j = 0; j < ghosts.length; j++) ghosts[j].pos = combo[j];
 
-                value = this.alphaBetaPruning(depth-1, level, pacman, ghosts, score, move, alpha, beta, true);
+                value = this.alphaBetaPruning(depth-1, level, pacman, ghosts, score, move, path, alpha, beta, true);
 
                 best = Math.min(best, value)
                 alpha = Math.min(alpha, best);
@@ -447,6 +505,8 @@ export default class GameBoard {
                     break;
             }
 
+            //set paths for ghosts
+            this.ghost_paths[ghost.name] = path;
             // set new path 
             this.finding.prev_paths[iter] = path;
             iter++;

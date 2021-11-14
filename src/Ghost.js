@@ -21,6 +21,8 @@ export default class Ghost {
         if (!objectExist(this.pos - 1, OBJECT_TYPE.WALL) && !objectExist(this.pos - 1, OBJECT_TYPE.GHOST)) moves.push(this.pos - 1);
         if (!objectExist(this.pos + GRID_SIZE, OBJECT_TYPE.WALL) && !objectExist(this.pos + GRID_SIZE, OBJECT_TYPE.GHOST)) moves.push(this.pos + GRID_SIZE);
         if (!objectExist(this.pos - GRID_SIZE, OBJECT_TYPE.WALL) && !objectExist(this.pos - GRID_SIZE, OBJECT_TYPE.GHOST)) moves.push(this.pos - GRID_SIZE);
+        moves.push(this.pos);
+        //debugger;
         return moves;
     }
 

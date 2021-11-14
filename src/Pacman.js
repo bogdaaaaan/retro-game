@@ -5,6 +5,7 @@ export default class Pacman {
         this.pos = startPos;
         this.startPos = startPos;
         this.speed = speed;
+        this.lives = 3;
         this.dir = null;
         this.timer = 0;
         this.powerPill = false;
