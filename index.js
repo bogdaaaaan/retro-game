@@ -22,7 +22,7 @@ const soundGhost = './assets/sounds/eat_ghost.wav';
 
 // Game Constants
 const POWER_PILL_TIME = 10000;
-const ALERT_TIME = 2000;
+const ALERT_TIME = 3000;
 const GLOBAL_SPEED = 80;
 
 const level = new Level(GRID_SIZE);
@@ -72,6 +72,9 @@ const getLevelCopy = () => {
     }
     return level_copy;
 }
+
+// set copy of level.grid to update it every new game
+let level_copy = getLevelCopy();
 
 const checkCollisions = (pacman, ghosts) => {
     const collidedGhost = ghosts.find((ghost) => pacman.pos === ghost.pos);
@@ -127,7 +130,7 @@ const checkCollisions = (pacman, ghosts) => {
     }
 };
 
-const gameLoop = (pacman, ghosts, level_copy) => {
+const gameLoop = (pacman, ghosts, level_layout) => {
     switch (gameBoard.state) {
         case 'player':
             gameBoard.moveCharacter(pacman);
@@ -136,18 +139,18 @@ const gameLoop = (pacman, ghosts, level_copy) => {
             checkCollisions(pacman, ghosts);
             break;
         case 'auto':
-            gameBoard.findPathToFood(pacman, level_copy, auto_eaten);
+            gameBoard.findPathToFood(pacman, level_layout, auto_eaten);
             auto_eaten = false;
             checkCollisions(pacman, ghosts);
-            ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level_copy, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
+            ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level_layout, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
             checkCollisions(pacman, ghosts);
             break;
         case 'minimax':
             let score_copy = score;
-            gameBoard.minimax(pacman, level_copy, ghosts, score_copy);
+            gameBoard.minimax(pacman, level_layout, ghosts, score_copy);
             score--;    
             checkCollisions(pacman, ghosts);
-            ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level_copy, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
+            ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level_layout, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
             checkCollisions(pacman, ghosts);
             break;
         default:
@@ -192,7 +195,12 @@ const gameLoop = (pacman, ghosts, level_copy) => {
                 });
             }, ALERT_TIME / 4);
             // Clearing interval
-            setTimeout(() => clearInterval(alertInterval), ALERT_TIME);
+            setTimeout(() => {
+                clearInterval(alertInterval);
+                ghosts.forEach((ghost) => {
+                    ghost.isAlerted = false;
+                });
+            }, ALERT_TIME);
         }, POWER_PILL_TIME - ALERT_TIME);
     }
 
@@ -228,6 +236,13 @@ const startGame = () => {
     // TASK 2 CHANGING GAMEBOARD STATE
     gameBoard.state = 'minimax';
 
+    // update level grid 
+    for (let i = 0; i < level_copy.length; i++) {
+        for (let j = 0; j < level_copy[i].length; j++) {
+            level.grid[i][j] = level_copy[i][j];
+        }
+    }
+
     gameBoard.createGrid(level.grid);
 
     const pacman = new Pacman(2, PACMAN_START_POS);
@@ -241,13 +256,13 @@ const startGame = () => {
     });
 
     const ghosts = [
-        new Ghost(6, GHOST_START_POS[0], moveToPacman, OBJECT_TYPE.BLINKY),
+        //new Ghost(6, GHOST_START_POS[0], moveToPacman, OBJECT_TYPE.BLINKY),
         //new Ghost(5, GHOST_START_POS[1], randomMovement, OBJECT_TYPE.PINKY),
         new Ghost(4, GHOST_START_POS[2], randomMovement, OBJECT_TYPE.INKY),
         new Ghost(3, GHOST_START_POS[3], moveToPacman, OBJECT_TYPE.CLYDE),
     ];
 
-    timer = setInterval(() => gameLoop(pacman, ghosts, getLevelCopy()), GLOBAL_SPEED);
+    timer = setInterval(() => gameLoop(pacman, ghosts, level.grid), GLOBAL_SPEED);
 };
 
 // Initialize game

@@ -31,6 +31,7 @@ export default class Pacman {
         if (!objectExist(this.pos - 1, OBJECT_TYPE.WALL) && !objectExist(this.pos - 1, OBJECT_TYPE.GHOSTLAIR)) moves.push(this.pos - 1);
         if (!objectExist(this.pos + GRID_SIZE, OBJECT_TYPE.WALL) && !objectExist(this.pos + GRID_SIZE, OBJECT_TYPE.GHOSTLAIR)) moves.push(this.pos + GRID_SIZE);
         if (!objectExist(this.pos - GRID_SIZE, OBJECT_TYPE.WALL) && !objectExist(this.pos - GRID_SIZE, OBJECT_TYPE.GHOSTLAIR)) moves.push(this.pos - GRID_SIZE);
+        moves.push(this.pos);
         return moves;
     }
 
