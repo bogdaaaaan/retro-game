@@ -111,32 +111,33 @@ export default class GameBoard {
         if (!pacman.shouldMove()) return;
 
         // set how much in future pacman can see
-        const max_depth = (level.length - 2);
+        const max_depth = 6;//(level.length - 2);
 
         // find available moves from current pacman position
         let moves = pacman.isThereMoves(this.objectExist);
         // ser variables
-        let best_move = null, best_move_score = 0, new_best_move_score = 0;
+        let best_move = null, best_move_score = -Infinity, new_best_move_score = 0;
         // if there is no moves for pacman set his best move as current position
         if (moves.length === 0) best_move = pacman.pos;
-        if (best_move === null) best_move = pacman.pos;
+    
+        if (moves.length) {
+            // make a move and start calculating if there a better move
+            for (let i = 0; i < moves.length; i++) {
+                let path = [moves[i]];
+                pacman.pos = moves[i];
 
-        // make a move and start calculating if there a better move
-        for (let i = 0; i < moves.length; i++) {
-            let path = [moves[i]];
-            pacman.pos = moves[i];
-
-            // get value from calculations
-            new_best_move_score = this.alphaBetaPruning(max_depth, level, pacman, ghosts, score, path);
-            
-            // if value we get is better than previous - set best score as new value
-            if (best_move_score < new_best_move_score) {
-                best_move_score = new_best_move_score;
-                best_move = moves[i];
+                // get value from calculations
+                new_best_move_score = this.alphaBetaPruning(max_depth, level, pacman, ghosts, score, path);
+                
+                // if value we get is better than previous - set best score as new value
+                if (best_move_score < new_best_move_score) {
+                    best_move_score = new_best_move_score;
+                    best_move = moves[i];
+                }
+                debugger;
             }
-            debugger;
         }
-
+        
         // change level grid layout 
         let [x, y] = coordsFromPos(best_move);
         level[x][y] = 0;
@@ -164,7 +165,7 @@ export default class GameBoard {
         return dot_count ? false : true;
     }
 
-    evaluate(depth, level, pacman, ghosts, score) {
+    evaluate(depth, level, pacman, ghosts, score, path) {
         let result_score = 0;
         // finishing earlier is better
         result_score += depth * 100;
@@ -181,7 +182,20 @@ export default class GameBoard {
         result_score += (dot_count * 10);
         // having more pills is better
         result_score += (pill_count * 50);
-        // being on empty squares is worse 
+        
+        // last move from path needs to be calculated
+        switch (path[path.length - 1]) {
+            // if last position is a dot, that means we dont have less dots than in previous calculations
+            case 2:
+                result_score += 10;
+                break;
+            // if it is pill, then we have less pills than in previous calculations
+            case 7:
+                result_score -= 50;
+                break;
+            default:
+                break;
+        }
 
         for (let i = 0; i < ghosts.length; i++) {
             const ghost = ghosts[i];
@@ -199,9 +213,16 @@ export default class GameBoard {
                 }
                 
             } else {
-                result_score += (path_length * 10);
+                if (path_length && path_length <= 5) {
+                    if (!path_length && path_length === 1) {
+                        return -Infinity;
+                    } else {
+                        result_score -= Math.floor(500 / path_length);
+                    }
+                }
             }
         }
+        //debugger;
         return score + result_score;
     }
 
@@ -210,13 +231,13 @@ export default class GameBoard {
         
         let flag = false;
         if (this.isWinner(level)) {
-            return this.evaluate(depth, level, pacman, ghosts, score) + 500;
+            return this.evaluate(depth, level, pacman, ghosts, score, path) + 500;
         } else if (depth === 0) {
             // if it's last move - make it before returning value
             if (isMaximizing) {
                 flag = true;
             } else {
-                return this.evaluate(depth, level, pacman, ghosts, score);
+                return this.evaluate(depth, level, pacman, ghosts, score, path);
             }
         }
         
@@ -236,10 +257,10 @@ export default class GameBoard {
             // if pacman ate dot he gets +10 point, if pill - gets +50
             switch(eaten) {
                 case 2:
-                    score += 10;
+                    score += (10 + (10 * depth));
                     break;
                 case 7:
-                    score += 50;
+                    score += (50 + (50 * depth));
                     break;
                 default: 
                     break;
@@ -250,9 +271,9 @@ export default class GameBoard {
                 const ghost = ghosts[i];
                 if (pacman.pos === ghost.pos) {
                     if (ghost.isScared) {
-                        score += 100;
+                        score += 500;
                     } else {
-                        score -= 500;
+                        score -= 1500;
                     }
                 }
             }
@@ -307,24 +328,25 @@ export default class GameBoard {
             let actions_to_take = [];
             for (let i = 0; i < ghosts.length; i++) {
                 const ghost = ghosts[i];
-                actions_to_take[i] = ghost.isThereMoves(this.objectExist);
+                let moves_actions = ghost.isThereMoves(this.objectExist);
+                // if ghost has no available move - set new move to ghost current position
+                actions_to_take[i] = moves_actions.length ? moves_actions : [ghost.pos];
             }
 
             // combine them into one array of all moves 
             function allPossibleCases(arr) {
                 if (arr.length == 1) {
-                  return arr[0];
+                    return arr[0];
                 } else {
-                  var result = [];
-                  var allCasesOfRest = allPossibleCases(arr.slice(1));  // recur with the rest of array
-                  for (var i = 0; i < allCasesOfRest.length; i++) {
-                    for (var j = 0; j < arr[0].length; j++) {
-                      result.push(arr[0][j] + ',' + allCasesOfRest[i]);
+                    let result = [];
+                    let allCasesOfRest = allPossibleCases(arr.slice(1));  // recur with the rest of array
+                    for (let i = 0; i < allCasesOfRest.length; i++) {
+                        for (let j = 0; j < arr[0].length; j++) {
+                        result.push(arr[0][j] + ',' + allCasesOfRest[i]);
+                        }
                     }
-                  }
-                  return result;
+                    return result;
                 }
-              
             }
             let combinations = allPossibleCases(actions_to_take);
             combinations = combinations.map(x => {
@@ -333,11 +355,15 @@ export default class GameBoard {
                 });
                 return x;
             });
-            let value = 0;
 
+            let value = 0;
+            // for every possible combination of moves calculate result value
             for (let i = 0; i < combinations.length; i++) {
                 let combo = combinations[i];
-                for (let j = 0; j < ghosts.length; j++) ghosts[j].pos = combo[j];
+                // make a move for each ghost
+                for (let j = 0; j < ghosts.length; j++) {
+                    ghosts[j].pos = combo[j];
+                }
 
                 value = this.alphaBetaPruning(depth, level, pacman, ghosts, score, path, alpha, beta, true);
 
@@ -346,6 +372,7 @@ export default class GameBoard {
                 if (alpha <= beta) break;
             }
 
+            // return ghosts to their previous positions
             for (let i = 0; i < ghosts.length; i++) {
                 const ghost = ghosts[i];
                 ghost.pos = prev_moves[i];
