@@ -76,6 +76,37 @@ export function coordsFromPos(pos) {
     return [(pos - (pos % GRID_SIZE)) / GRID_SIZE, pos % GRID_SIZE];
 }
 
+export function getCombinations(actions_to_take) {
+    // combine them into one array of all moves 
+    function allPossibleCases(arr) {
+        if (arr.length == 1) {
+            return arr[0];
+        } else {
+            let result = [];
+            let allCasesOfRest = allPossibleCases(arr.slice(1));  // recur with the rest of array
+            for (let i = 0; i < allCasesOfRest.length; i++) {
+                for (let j = 0; j < arr[0].length; j++) {
+                result.push(arr[0][j] + ',' + allCasesOfRest[i]);
+                }
+            }
+            return result;
+        }
+    }
+    let combinations = allPossibleCases(actions_to_take);
+    combinations = combinations.map(x => {
+        x = x.split(',').map(e => {
+            return Number(e);
+        });
+        return x;
+    });
+    combinations.filter((x) => {
+        if ([... new Set(x)].length === x.length) {
+            return x;
+        }
+    });
+    return combinations;
+}
+
 
 export const LEVEL = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],

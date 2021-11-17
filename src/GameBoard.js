@@ -1,4 +1,4 @@
-import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST, ROUND_END_TIME, coordsFromPos } from './setup.js';
+import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST, ROUND_END_TIME, coordsFromPos, getCombinations } from './setup.js';
 import PathFinding from './PathFinding.js';
 
 export default class GameBoard {
@@ -15,6 +15,7 @@ export default class GameBoard {
         this.path_to_food = [];
         this.prev_food_pos = null;
         this.ghost_paths = [];
+        this.minimax_positions = [];
     }
 
     showGameStatus(gameWin, lives) {
@@ -99,19 +100,21 @@ export default class GameBoard {
 
 // <-------------- MINIMAX --------------> //
 
-    minimax(pacman, level, ghosts, score) {
-        // pacman needs direction to make a move
-        pacman.dir = {
-            code: 37,
-            movement: -1,
-            rotation: 180
-        };
+    minimax(pacman, level, ghosts, score, chosen_algorithm) {
+        // pacman needs direction to make a first move
+        if (!pacman.dir) {
+            pacman.dir = {
+                code: 37,
+                movement: -1,
+                rotation: 180
+            };
+        }
 
         // pacman can't move every loop iteration 
         if (!pacman.shouldMove()) return;
 
         // set how much in future pacman can see
-        const max_depth = 6;//(level.length - 2);
+        const max_depth = Math.floor(Math.random() * (Math.floor(6) - Math.ceil(4) + 1)) + Math.ceil(4);
 
         // find available moves from current pacman position
         let moves = pacman.isThereMoves(this.objectExist);
@@ -119,36 +122,102 @@ export default class GameBoard {
         let best_move = null, best_move_score = -Infinity, new_best_move_score = 0;
         // if there is no moves for pacman set his best move as current position
         if (moves.length === 0) best_move = pacman.pos;
-    
+        // if all moves are the same it means pacman is stuck and can't see further into level to find food
+        let prev_pos = pacman.pos;
+        let moves_history = [];
         if (moves.length) {
             // make a move and start calculating if there a better move
             for (let i = 0; i < moves.length; i++) {
                 let path = [moves[i]];
                 pacman.pos = moves[i];
-
                 // get value from calculations
-                new_best_move_score = this.alphaBetaPruning(max_depth, level, pacman, ghosts, score, path);
-                
+                new_best_move_score = chosen_algorithm === 'alphaBeta' ? this.alphaBetaPruning(max_depth, level, pacman, ghosts, score, path) : this.expectimax(max_depth, level, pacman, ghosts, score, path, true);
+                // add score to list of move scores
+                moves_history.push(new_best_move_score);
                 // if value we get is better than previous - set best score as new value
                 if (best_move_score < new_best_move_score) {
                     best_move_score = new_best_move_score;
                     best_move = moves[i];
                 }
-                debugger;
             }
         }
+        // check for unique values, if there are not, then pacman is stuck
+        if ([... new Set(moves_history)].length === 1) {
+            best_move = this.getClosestFood(coordsFromPos(prev_pos), level);
+        }
         
+        this.minimax_positions.push(best_move);
+        if (this.minimax_positions.length === 4) {
+            
+            if ([... new Set(this.minimax_positions)].length === 2) {
+                best_move = this.getClosestFood(coordsFromPos(prev_pos), level);
+            }
+            this.minimax_positions = [];
+        }
+
+        if (!best_move) best_move = pacman.pos;
         // change level grid layout 
         let [x, y] = coordsFromPos(best_move);
         level[x][y] = 0;
 
+        let rotation = 0;
+        let movement = 0;
+        let code = 0;
+
+        let next_pos = [x,y];
+        let pacman_pos = coordsFromPos(prev_pos);
+
+        if (next_pos[0] === pacman_pos[0] && next_pos[1] > pacman_pos[1]) {
+            code = 39;
+            movement = 1;
+            rotation = 0;
+        } else if (next_pos[0] === pacman_pos[0] && next_pos[1] < pacman_pos[1]) {
+            code = 37;
+            movement = -1;
+            rotation = 180;
+        } else if (next_pos[0] > pacman_pos[0] && next_pos[1] === pacman_pos[1]) {
+            code = 40;
+            movement = level.length;
+            rotation = 90;
+        } else if (next_pos[0] < pacman_pos[0] && next_pos[1] === pacman_pos[1]) {
+            code = 38;
+            movement = -level.length;
+            rotation = 270;
+        }
+
+        pacman.dir = {
+            code,
+            movement,
+            rotation
+        };
+        
         // move pacman at screen
         const { classesToRemove, classesToAdd } = pacman.makeMove();
+        if (pacman.rotation && next_pos !== pacman.pos) {
+            this.rotateDiv(next_pos, pacman.dir.rotation);
+            this.rotateDiv(pacman.pos, 0);
+        }
         this.removeObject(pacman.pos, classesToRemove);
         pacman.setNewPos(best_move);
         this.addObject(best_move, classesToAdd);
 
-        console.log('move done at ' + best_move + ' with best score at ' + best_move_score);
+        //console.log('move done at ' + best_move + ' with best score at ' + best_move_score + ' with max_depth at ' + max_depth);
+    }
+
+    getClosestFood(from, level) {
+        let to = 0;
+        for (let i = 0; i < level.length; i++) {
+            for (let j = 0; j < level[i].length; j++) {
+                if (level[i][j] === 2 || level[i][j] === 7) {
+                   to = [i, j]; 
+                }
+            }
+        }
+        let path = this.finding.dfs(level, from, to);
+        if (path.length) {
+            let element = path[0];
+            return ((element[0] * level.length) + element[1]);
+        }
     }
 
     isWinner(level) {
@@ -168,7 +237,7 @@ export default class GameBoard {
     evaluate(depth, level, pacman, ghosts, score, path) {
         let result_score = 0;
         // finishing earlier is better
-        result_score += depth * 100;
+        result_score += depth * 1000;
         
         let dot_count = 0;
         let pill_count = 0;
@@ -181,7 +250,7 @@ export default class GameBoard {
         // having less dots is better
         result_score += (dot_count * 10);
         // having more pills is better
-        result_score += (pill_count * 50);
+        result_score += (pill_count * 200);
         
         // last move from path needs to be calculated
         switch (path[path.length - 1]) {
@@ -222,13 +291,127 @@ export default class GameBoard {
                 }
             }
         }
-        //debugger;
         return score + result_score;
     }
 
-    alphaBetaPruning(depth, level, pacman, ghosts, score, path, alpha = -Infinity, beta = Infinity, isMaximizing = true) {
-        //console.log('Current depth is: ', depth, ', current score is: ', score, ', current move is: ', move);
+    expectimax(depth, level, pacman, ghosts, score, path, isMaximizing = true) {  
+        let flag = false;
+        if (this.isWinner(level)) {
+            return this.evaluate(depth, level, pacman, ghosts, score, path) + 500;
+        } else if (depth === 0) {
+            // if it's last move - make it before returning value
+            if (isMaximizing) {
+                flag = true;
+            } else {
+                return this.evaluate(depth, level, pacman, ghosts, score, path);
+            }
+        }
         
+        // pacman turn
+        if (isMaximizing) {
+            // set best as -infinity
+            let best = -Infinity;
+            // save all previous states
+            let prev_score = score;
+            let prev_move = pacman.pos;
+            // get info about current position on level grid
+            let [x,y] = coordsFromPos(pacman.pos);
+            let eaten = level[x][y];
+            if (!flag) level[x][y] = 0;
+            // if pacman ate dot he gets +10 point, if pill - gets +50
+            switch(eaten) {
+                case 2:
+                    score += (10 + (10 * depth));
+                    break;
+                case 7:
+                    score += (50 + (50 * depth));
+                    break;
+                default: 
+                    break;
+            }
+            // if pacman ate a ghost he gets +100 point, if he collide with ghost without power pill - he loses 500 points
+            for (let i = 0; i < ghosts.length; i++) {
+                const ghost = ghosts[i];
+                if (pacman.pos === ghost.pos) {
+                    if (ghost.isScared) {
+                        score += 500;
+                    } else {
+                        score -= 15000;
+                    }
+                }
+            }
+
+            // every turn score decreases by one point
+            score--;
+
+            // if it's last pacman move, return score value 
+            if (flag) return this.evaluate(depth, level, pacman, ghosts, score);
+
+            // find available moves from current
+            let available_moves = pacman.isThereMoves(this.objectExist);
+
+            let value = 0;
+            for (let i = 0; i < available_moves.length; i++) {
+                // update path 
+                const next_move = available_moves[i];
+                path.push(next_move);
+                // make a move
+                pacman.pos = next_move;
+                // get best value
+                value = this.alphaBetaPruning(depth-1, level, pacman, ghosts, score, path, false);
+                // delete last move from path
+                path.pop();
+                // get best value from all available moves
+                best = Math.max(best, value);
+            }
+
+            // set previous values
+            score = prev_score;
+            level[x][y] = eaten;
+            pacman.pos = prev_move;
+
+            return best;
+        } else {
+            let best = Infinity;
+            
+            // save moves before ghost turn
+            let prev_moves = [];
+            for (let i = 0; i < ghosts.length; i++) {
+                const ghost = ghosts[i];
+                prev_moves.push(ghost.pos);
+            }
+            // find available moves
+            let actions_to_take = [];
+            for (let i = 0; i < ghosts.length; i++) {
+                const ghost = ghosts[i];
+                let moves_actions = ghost.isThereMoves(this.objectExist);
+                // if ghost has no available move - set new move to ghost current position
+                actions_to_take[i] = moves_actions.length ? moves_actions : [ghost.pos];
+            }
+            
+            let combinations = getCombinations(actions_to_take);
+            let value = [];
+            // for every possible combination of moves calculate result value
+            for (let i = 0; i < combinations.length; i++) {
+                let combo = combinations[i];
+                // make a move for each ghost
+                for (let j = 0; j < ghosts.length; j++) {
+                    ghosts[j].pos = combo[j];
+                }
+                value.push(this.alphaBetaPruning(depth, level, pacman, ghosts, score, path, true));
+            }
+
+            // return ghosts to their previous positions
+            for (let i = 0; i < ghosts.length; i++) {
+                const ghost = ghosts[i];
+                ghost.pos = prev_moves[i];
+            }
+            
+            return Math.floor(value.reduce((previousValue, currentValue) => previousValue + currentValue) / value.length)
+        }
+    }
+
+    alphaBetaPruning(depth, level, pacman, ghosts, score, path, alpha = -Infinity, beta = Infinity, isMaximizing = true) {
         let flag = false;
         if (this.isWinner(level)) {
             return this.evaluate(depth, level, pacman, ghosts, score, path) + 500;
@@ -266,14 +449,14 @@ export default class GameBoard {
                     break;
             }
 
-            // if pacman ate a ghost he gets +100 point, if he collide with ghost without power pill - he loses 500 points
+            //if pacman ate a ghost he gets +100 point, if he collide with ghost without power pill - he loses 500 points
             for (let i = 0; i < ghosts.length; i++) {
                 const ghost = ghosts[i];
                 if (pacman.pos === ghost.pos) {
                     if (ghost.isScared) {
-                        score += 500;
+                        score += 100;
                     } else {
-                        score -= 1500;
+                        score -= 500;
                     }
                 }
             }
@@ -294,15 +477,12 @@ export default class GameBoard {
                 path.push(next_move);
                 // make a move
                 pacman.pos = next_move;
-
                 // get best value
                 value = this.alphaBetaPruning(depth-1, level, pacman, ghosts, score, path, alpha, beta, false);
                 // delete last move from path
                 path.pop();
-
                 // get best value from all available moves
                 best = Math.max(best, value);
-
                 // if there is no better value in lower parts of minimax tree - break out of loop
                 alpha = Math.max(alpha, best);
                 if (beta <= alpha) break;
@@ -333,29 +513,7 @@ export default class GameBoard {
                 actions_to_take[i] = moves_actions.length ? moves_actions : [ghost.pos];
             }
 
-            // combine them into one array of all moves 
-            function allPossibleCases(arr) {
-                if (arr.length == 1) {
-                    return arr[0];
-                } else {
-                    let result = [];
-                    let allCasesOfRest = allPossibleCases(arr.slice(1));  // recur with the rest of array
-                    for (let i = 0; i < allCasesOfRest.length; i++) {
-                        for (let j = 0; j < arr[0].length; j++) {
-                        result.push(arr[0][j] + ',' + allCasesOfRest[i]);
-                        }
-                    }
-                    return result;
-                }
-            }
-            let combinations = allPossibleCases(actions_to_take);
-            combinations = combinations.map(x => {
-                x = x.split(',').map(e => {
-                    return Number(e);
-                });
-                return x;
-            });
-
+            let combinations = getCombinations(actions_to_take);
             let value = 0;
             // for every possible combination of moves calculate result value
             for (let i = 0; i < combinations.length; i++) {
@@ -364,7 +522,6 @@ export default class GameBoard {
                 for (let j = 0; j < ghosts.length; j++) {
                     ghosts[j].pos = combo[j];
                 }
-
                 value = this.alphaBetaPruning(depth, level, pacman, ghosts, score, path, alpha, beta, true);
 
                 best = Math.min(best, value)

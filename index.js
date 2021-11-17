@@ -1,5 +1,6 @@
 import { OBJECT_TYPE, ROUND_END_TIME, GRID_SIZE, coordsFromPos } from './src/setup.js';
 import { randomMovement, moveToPacman } from './src/ghostMoves.js';
+import { write_csv } from './src/Stats.js';
 
 import GameBoard from './src/GameBoard.js';
 import Pacman from './src/Pacman.js';
@@ -26,6 +27,18 @@ const ALERT_TIME = 3000;
 const GLOBAL_SPEED = 80;
 
 const level = new Level(GRID_SIZE);
+level.grid = [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+    [1, 7, 1, 9, 9, 9, 9, 1, 2, 1],
+    [1, 2, 1, 9, 9, 9, 9, 1, 2, 1],
+    [1, 2, 1, 9, 9, 9, 9, 1, 2, 1],
+    [1, 2, 1, 9, 9, 9, 9, 1, 7, 1],
+    [1, 2, 1, 1, 1, 1, 1, 1, 2, 1],
+    [1, 2, 2, 2, 0, 2, 2, 2, 2, 1],
+    [1, 1, 1, 2, 2, 2, 2, 2, 2, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  ];
 const gameBoard = GameBoard.createGameBoard(gameGrid, level.grid);
 
 const [PACMAN_START_POS, GHOST_START_POS] = level.calculatePositions();
@@ -46,7 +59,18 @@ const playAudio = (sound) => {
     soundEffect.play();
 };
 
+// tries till game stat is written 
+const MAX_GAMES = 50;
+let till_end = MAX_GAMES;
+let chosen_algorithm = 'alphaBeta';
+let result_data = [[`Win`, `Time (seconds)`, `Score`, `Algorithm`]];
+let start_game_time = null;
+let game_end_time = null;
+
 const gameOver = (pacman) => {
+    // time manage
+    game_end_time = performance.now()
+
     playAudio(soundGameOver);
 
     document.removeEventListener('keydown', (e) =>
@@ -57,6 +81,22 @@ const gameOver = (pacman) => {
     clearInterval(timer);
     startButton.classList.remove('hide');
     livesInfo.classList.add('hide');
+    till_end--;
+    if (till_end) {
+        result_data.push([`${gameWin}`, `${((game_end_time - start_game_time) / 1000).toFixed(2)}`, `${score}`, `${chosen_algorithm}`]);
+        setTimeout(() => startGame(), 2000);
+    } else if (!till_end && chosen_algorithm === 'alphaBeta'){
+        result_data.push([`${gameWin}`, `${((game_end_time - start_game_time) / 1000).toFixed(2)}`, `${score}`, `${chosen_algorithm}`]);
+        till_end = MAX_GAMES;
+        chosen_algorithm = 'expectimax';
+        console.log(result_data, till_end, chosen_algorithm);
+        setTimeout(() => startGame(), 2000);
+    } else {
+        console.log('end',result_data, till_end, chosen_algorithm);
+        result_data.push([`${gameWin}`, `${((game_end_time - start_game_time) / 1000).toFixed(2)}`, `${score}`, `${chosen_algorithm}`]);
+        write_csv(result_data);
+    }
+    
 };
 
 const getLevelCopy = () => {
@@ -147,7 +187,7 @@ const gameLoop = (pacman, ghosts, level_layout) => {
             break;
         case 'minimax':
             let score_copy = score;
-            gameBoard.minimax(pacman, level_layout, ghosts, score_copy);
+            gameBoard.minimax(pacman, level_layout, ghosts, score_copy, chosen_algorithm);
             score--;    
             checkCollisions(pacman, ghosts);
             ghosts.forEach((ghost) => gameBoard.autoMoveGhost(ghost, level_layout, coordsFromPos(pacman.pos), coordsFromPos(ghost.pos)));
@@ -223,6 +263,7 @@ const gameLoop = (pacman, ghosts, level_layout) => {
 };
 
 const startGame = () => {
+    start_game_time = performance.now()
     playAudio(soundGameStart);
 
     gameWin = false;
